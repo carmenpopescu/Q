@@ -690,7 +690,7 @@ abstract class DB
                     
                     $key = addcslashes($key, '"$');
                     $var_value = is_string($value) ? '"' . str_replace('"' , '\'', $value) . '"' : var_give($value, true);
-                    if (is_array($value)) $apply .= '$properties[' . $type_key . ']["' . $key . '"] = empty($properties[' . $type_key . ']["' . $key . '"]) ? ' . $var_value .  ' : array_unique(array_merge($properties[' . $type_key . ']["' . $key . '"], $var_value));' . "\n";
+                    if (is_array($value)) $apply .= '$properties[' . $type_key . ']["' . $key . '"] = empty($properties[' . $type_key . ']["' . $key . '"]) ? ' . $var_value .  ' : array_unique(array_merge($properties[' . $type_key . ']["' . $key . '"], (array)$var_value));' . "\n";
                       else $apply .= 'if (!isset($properties[' . $type_key . ']["' . $key . '"])) $properties[' . $type_key . ']["' . $key . '"] = ' . $var_value . ';' . "\n";                      
                     
                     $applysimple = $applysimple && $count==0 && $key[0] !== '+';

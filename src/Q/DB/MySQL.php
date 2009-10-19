@@ -402,6 +402,8 @@ class DB_MySQL extends DB
 	 */
 	public function getPrimaryKey($table, $autoIncrementOnly=false, $asIdentifier=false)
 	{
+        if ($table instanceof DB_Table) return $table->getPrimaryKey($autoIncrementOnly, $asIdentifier);
+		
 		$key = ($autoIncrementOnly ? '+!!' : '') . $table;
 		
 		if (!array_key_exists($key, $this->primaryKeys)) {
@@ -572,7 +574,7 @@ class DB_MySQL extends DB
 	public function prepareSelect($table, $fields=null, $criteria=null, $where=null)
 	{
 		$parent = $table instanceof DB_Table && $table->getLink() === $this ? $table : $this;
-		if ($table instanceof DB_Table) $table = $table->getTableName(); 
+//		if ($table instanceof DB_Table) $table = $table->getTableName(); 
 	    
 	    if (isset($criteria)) {
 	        if (!is_array($criteria) || !is_string(key($criteria))) {
@@ -734,10 +736,7 @@ class DB_MySQL extends DB
 
 		// Execute query statement
 		$result = $this->nativeQuery($tree[0]);
-		if (!$result) {
-			if ($this->native->errno == 1451) throw new DB_Constraint_Exception($this->native->error, $this->native->errno);
-			throw new DB_QueryException("Query failed: " . $this->native->error . "\nQuery: {$tree[0]}", $this->native->errno);
-		}
+		if (!$result) throw new DB_QueryException("Query failed: " . $this->native->error . "\nQuery: {$tree[0]}");
 		
 		// Return value if query did not return a mysql_result object
 		if (!is_object($result)) return $this->native->insert_id ? $this->native->insert_id : $result;
