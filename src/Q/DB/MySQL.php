@@ -736,8 +736,11 @@ class DB_MySQL extends DB
 
 		// Execute query statement
 		$result = $this->nativeQuery($tree[0]);
-		if (!$result) throw new DB_QueryException("Query failed: " . $this->native->error . "\nQuery: {$tree[0]}");
-		
+		if (!$result) {
+			if ($this->native->errno == 1451) throw new DB_Constraint_Exception($this->native->error, $this->native->errno);
+			throw new DB_QueryException("Query failed: " . $this->native->error . "\nQuery: {$tree[0]}");
+		}
+
 		// Return value if query did not return a mysql_result object
 		if (!is_object($result)) return $this->native->insert_id ? $this->native->insert_id : $result;
 
