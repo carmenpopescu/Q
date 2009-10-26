@@ -683,7 +683,7 @@ class DB_MySQL extends DB
 	public function prepareDelete($table, $id)
 	{
 		$parent = $table instanceof DB_Table && $table->getLink() === $this ? $table : $this;
-		if ($table instanceof DB_Table) $table = $table->getTableName(); 
+//		if ($table instanceof DB_Table) $table = $table->getTableName(); 
 
 		if (is_object($id) && !empty($id->{'#truncate'})) {
 		    $statement = $this->querySplitter->buildTruncateStatement($table);
