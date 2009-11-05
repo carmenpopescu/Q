@@ -617,7 +617,7 @@ class DB_MySQL extends DB
 	public function prepareStore($table, $values)
 	{
 		$parent = $table instanceof DB_Table && $table->getLink() === $this ? $table : $this;
-		if ($table instanceof DB_Table) $table = $table->getTableName(); 
+//		if ($table instanceof DB_Table) $table = $table->getTableName(); 
 		
 	    // Get the fieldnames and rows (values)
 		if (func_num_args() > 2) {
