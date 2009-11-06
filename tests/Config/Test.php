@@ -2,6 +2,8 @@
 use Q\Config, Q\Fs;
 
 require_once 'TestHelper.php';
+require_once 'PHPUnit/TextUI/TestRunner.php';
+
 require_once 'Q/Config.php';
 require_once 'Q/Fs.php';
 
@@ -61,7 +63,6 @@ class Config_Test extends \PHPUnit_Framework_TestCase
         $refl = new \ReflectionProperty($config, '_ext');
         $refl->setAccessible(true);
         $ext = $refl->getValue($config);
-        var_dump($ext); exit;
         $this->assertType('Q\Config_File', $config);
         $this->assertEquals('xml', $ext);
     }
@@ -77,55 +78,4 @@ class Config_Test extends \PHPUnit_Framework_TestCase
         $this->assertType('Q\Config_File', $config);
         $this->assertEquals($this->file, (string)$path);
     }
-/*
-    public function testOptions()
-    {
-        $config = Config::with('xml:' . $this->file . ';abc=22', array('xyz'=>'test'));
-        $this->assertType('Q\Config_File', $config);
-        
-        $refl = new \ReflectionProperty($config, '_options');
-        $refl->setAccessible(true);
-        $options = $refl->getValue($config);
-
-        $this->assertEquals($this->file, (string)$options['path']);
-        $this->assertEquals(22, $options['abc']);
-        $this->assertEquals('test', $options['xyz']);
-    }
-    
-    public function testDefautlOptions()
-    {
-        Config::$defaultOptions['abc'] = 22;
-        
-        $config = Config::with('xml', array('path'=>$this->file));
-        
-        $this->assertType('Q\Config_File', $config);
-
-        $refl = new \ReflectionProperty($config, '_options');
-        $refl->setAccessible(true);
-        $options = $refl->getValue($config);
-        
-        $this->assertEquals(22, $options['abc']);
-    }
-*/
-/*
-    public function testInterface()
-    {
-        $this->assertType('Q\Config_Mock', Config::i());
-        $this->assertFalse(Config::i()->exists());
-        
-        Config::i()->with('none');
-        $this->assertType('Q\Config_None', Config::i());
-        $this->assertTrue(Config::i()->exists());
-    }
-
-    public function testAlternativeInterface()
-    {
-        $this->assertType('Q\Config_Mock', Config::mytest());
-        $this->assertFalse(Config::mytest()->exists());
-        
-        Config::mytest()->with('yaml:' . __DIR__ . '/settings/test.yaml');
-        $this->assertType('Q\Config_Yaml', Config::mytest());
-        $this->assertTrue(Config::mytest()->exists());
-    }
-*/
 }

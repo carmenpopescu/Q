@@ -76,20 +76,20 @@ class Config_Dir extends Config_File
      */
     public function offsetSet($key, $value)
     {
-       if (is_scalar($value) || is_resource($value)) throw new Exception("Unable to set '$key' to '$value' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object");
+        if (is_scalar($value) || is_resource($value)) throw new Exception("Unable to set '$key' to '$value' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object");
        
        if ($value instanceof Config_File) {
             $config = $value;
 
             if (isset($config->_path)) throw new Exception("Unable to set '$key' to Config_File object for Config_Dir '{$this->_path}': Config_File path is already set'");
-            
-            if (isset($config->_ext) && isset($this->_ext) && $config->_ext != $this->_ext) throw new Exception("Unable to create section '$key': Extension specified for Config_Dir '{$this->_path}' and extension specified for Config_File object setting are different");
+
+//            if (isset($config->_ext) && isset($this->_ext) && $config->_ext != $this->_ext) throw new Exception("Unable to create section '$key': Extension specified for Config_Dir '{$this->_path}' and extension specified for Config_File object setting are different");
             if (!isset($config->_ext) && !isset($this->_ext)) throw new Exception("Unable to create section '$key': No extension specified for Config_Dir '{$this->_path}' or for the Config_File object setting");
             if (!isset($config->_ext)) $config->_ext = $this->_ext;
             
             if (isset($this->_transformer)) $config->_transformer = $this->_transformer;
             
-            $config->_path = $config instanceof Config_Dir ? $this->_path->dir($key) : $this->_path->file("$key.{$this->_ext}");
+            $config->_path = $config instanceof Config_Dir ? $this->_path->dir($key) : $this->_path->file("$key.{$config->_ext}");
        } else {
             if (!$this->_ext) throw new Exception("Unable to create section '$key': No extension specified for Config_Dir '{$this->_path}', creating a section requires setting a Config_File object"); 
 
@@ -112,7 +112,6 @@ class Config_Dir extends Config_File
     public function offsetGet($key)
     {
         if (parent::offsetExists($key)) return parent::offsetGet($key);
-        
         $dirname = "{$this->_path}/{$key}";
         $filename = "{$dirname}.{$this->_ext}";
         
@@ -169,6 +168,17 @@ class Config_Dir extends Config_File
         return $this;
     }
     
+    /**
+     * Save all settings
+     */
+    public function save() {
+        if (!isset($this->_path)) throw new Exception("Unable to save setting : the path was not specified.");    
+        
+        foreach ($this as $key=>$config) { 
+            if (!isset($config)) $this->_path->$key->remove(Fs::RECURSIVE);
+              else $config->save();
+        }
+    }
 }
 /* 
 $conf = new Config_Dir('/etc/myapp', array('ext'=>'yaml'));

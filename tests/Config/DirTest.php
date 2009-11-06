@@ -1,8 +1,9 @@
 <?php
-use Q\Config, Q\Config_Dir;
+use Q\Config, Q\Config_Dir, Q\Config_File;
 
 require_once 'TestHelper.php';
 require_once 'Q/Config/Dir.php';
+require_once 'Q/Config/File.php';
 require_once 'Config/Mock/Unserialize.php';
 
 /**
@@ -552,4 +553,49 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('xml', $config['dir1']['file3']['output']);
     }    
 
+    /**
+     * Tests Config_Dir() : save file of specified key
+     */
+    public function testDir_SaveFile() {
+        $config = Config::with($this->dir);
+        $config['abc'] = new Config_File(array('ext'=>'mock'));
+        $config['abc']['a'] = 20;
+        $config['abc']->save();  
+
+        $this->assertArrayHasKey(0, Config_Mock_Unserialize::$created);
+        $mock = Config_Mock_Unserialize::$created[0];        
+        $this->assertEquals((array)$config['abc'], $mock->reverse->in);
+
+        $this->assertType('Q\Config_File', $config);
+        $this->assertEquals($mock->reverse->out, serialize((array)$config['abc']));
+        $this->assertEquals(1, count(Config_Mock_Unserialize::$created));        
+        unlink($this->dir."/abc.mock");
+    }
+
+    /**
+     * Tests Config_Dir() : save
+     */
+    public function testDir_Save() {
+        $config = Config::with($this->dir);
+        $config['abc'] = new Config_File(array('ext'=>'mock'));
+        $config['abc']['a'] = 20;
+        $config['def'] = new Config_File(array('ext'=>'mock'));
+        $config['def']['test'] = 'testarea';
+        $config['def']['alfa']=array('beta'=>'gama');
+        $config->save();  
+        
+        $this->assertArrayHasKey(0, Config_Mock_Unserialize::$created);
+        $mock_abc = Config_Mock_Unserialize::$created[0];        
+        $mock_def = Config_Mock_Unserialize::$created[1];        
+        $this->assertEquals((array)$config['abc'], $mock_abc->reverse->in);
+        $this->assertEquals((array)$config['def'], $mock_def->reverse->in);
+        
+        $this->assertType('Q\Config_File', $config);
+        $this->assertEquals($mock_abc->reverse->out, serialize((array)$config['abc']));
+        $this->assertEquals($mock_def->reverse->out, serialize((array)$config['def']));
+        $this->assertEquals(2, count(Config_Mock_Unserialize::$created));        
+
+        unlink($this->dir."/abc.mock");
+        unlink($this->dir."/def.mock");
+    }
 }

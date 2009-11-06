@@ -1,8 +1,8 @@
 <?php
 require_once 'PHPUnit/Framework/TestSuite.php';
-require_once 'Test/Config.php';
-require_once 'Test/Config/File.php';
-require_once 'Test/Config/Dir.php';
+require_once 'Config/Test.php';
+require_once 'Config/FileTest.php';
+require_once 'Config/DirTest.php';
 
 /**
  * Static test suite.

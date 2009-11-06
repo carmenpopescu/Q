@@ -2,13 +2,14 @@
 use Q\Transform;
 
 require_once 'Q/Transform.php';
-require_once('Serialize.php');
+require_once('Unserialize.php');
+
 /**
  * Mock object for unserialize transformer used in Config unit tests.
  * 
  * @ignore
  */
-class Config_Mock_Unserialize extends Transform
+class Config_Mock_Serialize extends Transform
 {
     /**
      * Created transform mock objects
@@ -26,27 +27,18 @@ class Config_Mock_Unserialize extends Transform
      * Return data
      * @var array
      */
-    public $out = array(
-      'db' => array(
-        'host'   => 'localhost',
-        'dbname' => 'test',
-        'user'   => 'myuser',
-        'pwd'    => 'mypwd'
-      ),
-      'output' => 'xml',
-      'input'  => 'json'
-    );
-    
-    /**
-     * Return the reverse object
-     */
-    public $reverse;
+    public $out;
     
     /**
      * Default extension for file with serialized data.
      * @var string
      */
     public $ext = 'mock';
+    
+    /**
+     * Return the reverse object
+     */
+    public $reverse;
     
     /**
      * Class constructor
@@ -64,10 +56,10 @@ class Config_Mock_Unserialize extends Transform
      */
     public function process($data)
     {
-        $this->in = $data;
+        $this->in = (array)$data;
+        $this->out = serialize((array)$data);
         return $this->out;
     }
-
 
     /**
      * Get a transformer that does the reverse action.
@@ -77,11 +69,11 @@ class Config_Mock_Unserialize extends Transform
      */
     public function getReverse($chain=null)
     {
-        $ob = new Config_Mock_Serialize($this);
+        $ob = new Config_Mock_Unserialize($this);
         if ($chain) $ob->chainInput($chain);
-    
-        $this->reverse = $ob;
 
+        $this->reverse = $ob;
+        
         return $this->chainInput ? $this->chainInput->getReverse($ob) : $ob;  
     }
 }

@@ -43,10 +43,10 @@ class Config_File extends Config
     /**
      * Class constructor
      * 
-     * @param string $path     OPTIONAL
+     * @param string $path
      * @param array  $options
      */
-    public function __construct($path, $options=array())
+    public function __construct($path=null, $options=array())
     {
         if (is_array($path)) {
             $options = $path + $options;
@@ -73,15 +73,28 @@ class Config_File extends Config
         }
         
         $this->_path = isset($path) ? Fs::file($path) : (isset($options['path']) ? Fs::file($options['path']) : null);
-        $ext = isset($options['ext']) ? $options['ext'] : (isset($this->_path) ? $this->_path->extension() : null);
+        $this->_ext = isset($options['ext']) ? $options['ext'] : (isset($this->_path) ? $this->_path->extension() : null);
         
         if (isset($options['transformer'])) {
             $this->_transformer = $options['transformer'] instanceof Transformer ? $options['transformer'] : Transform::with($options['transformer']);
-        } elseif (!empty($ext)) {
-            $this->_transformer = Transform::from($ext);
+            if (!isset($this->_ext)) $this->_ext = $this->_transformer->ext;
+        } elseif (!empty($this->_ext)) {
+            $this->_transformer = Transform::from($this->_ext);
         }
         
-        $values = isset($this->_path) && isset($this->_transformer) ? $this->_transformer->process($this->_path) : array();
+        $values = isset($this->_path) && $this->_path->exists() && isset($this->_transformer) ? $this->_transformer->process($this->_path) : array();
         \ArrayObject::__construct(&$values, \ArrayObject::ARRAY_AS_PROPS);
     }
+
+    /**
+     * Save all settings
+     */
+    public function save() 
+    {
+        if (!isset($this->_path)) throw new Exception("Unable to save setting: Path is not set");
+        if (!isset($this->_transformer)) throw new Exception("Unable to save setting for '{$this->_path}': Transformer is not set");
+
+        $this->_transformer->getReverse()->save($this->_path, (array)$this);
+    }
+        
 }
