@@ -2,7 +2,6 @@
 namespace Q;
 
 require_once 'Q/misc.php';
-require_once 'Q/Config/Exception.php';
 
 /**
  * Load a configuration settings

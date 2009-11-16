@@ -8,6 +8,11 @@ require_once 'Q/Fs.php';
 /**
  * Load and parse config files from a directory.
  * 
+ * Options:
+ *  path          Path to the directory
+ *  ext           Extension  of the files that will be loaded
+ *  transformer   Transformer object or driver - to transform data from files specific format to array
+ *  
  * {@example 
  * 
  * 1) 
@@ -29,16 +34,16 @@ class Config_File extends Config
     
     /**
      * File path
-     * @Fs_Node
+     * @var Fs_Node
      */
     protected $_path;
     
     /**
      * File extension and driver in use
-     *
      * @var string
      */
     protected $_ext;
+    
     
     /**
      * Class constructor
@@ -72,29 +77,68 @@ class Config_File extends Config
             }
         }
         
-        $this->_path = isset($path) ? Fs::file($path) : (isset($options['path']) ? Fs::file($options['path']) : null);
+        $this->_path = $this->setPath(isset($path) ? $path: (isset($options['path']) ? $options['path'] : null));
+        
         $this->_ext = isset($options['ext']) ? $options['ext'] : (isset($this->_path) ? $this->_path->extension() : null);
         
         if (isset($options['transformer'])) {
             $this->_transformer = $options['transformer'] instanceof Transformer ? $options['transformer'] : Transform::with($options['transformer']);
-            if (!isset($this->_ext)) $this->_ext = $this->_transformer->ext;
+            if (empty($this->_ext)) $this->_ext = $this->_transformer->ext;
         } elseif (!empty($this->_ext)) {
             $this->_transformer = Transform::from($this->_ext);
         }
         
-        $values = isset($this->_path) && $this->_path->exists() && isset($this->_transformer) ? $this->_transformer->process($this->_path) : array();
+        $values = array();
+        if (isset($this->_path) && $this->_path instanceof Fs_File && $this->_path->exists()) {
+            if (!isset($this->_transformer)) throw new Exception("Unable to initialize Config_File object: Transformer is not set.");
+            $values = $this->_transformer->process($this->_path);
+            if (empty($values)) $values = array();
+        }
         \ArrayObject::__construct(&$values, \ArrayObject::ARRAY_AS_PROPS);
     }
 
     /**
+     * Set file path
+     * 
+     * @param string|Fs_Dir $path
+     * @return Fs_Dir
+     */
+    public function setPath($path=null) {
+        if (isset($this->_path)) throw new Exception("Unable to set '$path' to Config_File object: Config_File path '{$this->_path}' is already set.");
+        $this->_path = (isset($path) ? Fs::file($path) : null);
+        return $this->_path;
+    }
+
+    /**
+     * Get directory path
+     * 
+     * @return Fs_Dir
+     */
+    public function getPath() {
+        return $this->_path;
+    }
+
+    /**
+     * Set transformer
+     * 
+     * @param string|Transform $transformer
+     * @return Transformer
+     */
+    public function setTransformer($transformer) {
+        if (isset($this->_transformer)) throw new Exception("Unable to set '".($transformer instanceof Transformer ? $transformer->ext : $transformer)."' to Config_File object: Transformer '{$this->_transformer->ext}' is already set.");
+        $this->_transformer = $transformer instanceof Transformer ? $transformer : Transform::with($transformer);       
+        return $this->_transformer;
+    }
+    
+    /**
      * Save all settings
      */
-    public function save() 
+    public function save($mode=0666, $flags=0) 
     {
         if (!isset($this->_path)) throw new Exception("Unable to save setting: Path is not set");
-        if (!isset($this->_transformer)) throw new Exception("Unable to save setting for '{$this->_path}': Transformer is not set");
+        if (!isset($this->_transformer)) throw new Exception("Unable to save setting to '{$this->_path}': Transformer is not set.");
 
-        $this->_transformer->getReverse()->save($this->_path, (array)$this);
+        $this->_transformer->getReverse()->save($this->_path, (array)$this, $flags);
     }
         
 }

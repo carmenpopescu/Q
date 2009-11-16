@@ -83,4 +83,58 @@ class Config_FileTest extends \PHPUnit_Framework_TestCase
         
         $this->assertEquals(1, count(Config_Mock_Unserialize::$created));        
     }
+    
+    /**
+     *  Test Config_File() : exception when no transformer sau ext was provided
+     */
+    public function test_Construct_NoTransformer() {
+        $file = sys_get_temp_dir() . '/q-config_filetest-' . md5(uniqid()) . '';        
+        if (!file_put_contents($file, ' ')) $this->markTestSkipped("Could not create file '{$file}'");
+        
+        $this->setExpectedException('Q\Exception', "Unable to initialize Config_File object: Transformer is not set.");
+        $config = new Config_File($file);
+       
+        if (file_exists($file)) unlink($file);
+    }
+
+    /**
+     *  Test Config_File() : exception ->path already set
+     */
+    public function test_setPath_PathAlreadySet() {
+        $this->setExpectedException('Q\Exception', "Unable to set 'a_path' to Config_File object: Config_File path '{$this->file}' is already set.");
+        $config = new Config_File($this->file);
+       
+        $config->setPath('a_path');
+    }
+
+    /**
+     *  Test Config_File() : exception -> unable to save - path is not set
+     */
+    public function test_save_PathNotSet() {
+        $this->setExpectedException('Q\Exception', "Unable to save setting: Path is not set");
+        $config = new Config_File();
+        $config['a'] = 10;
+        $config->save();
+    }
+
+    /**
+     *  Test Config_File() : exception -> unable to save - path is not set
+     */
+    public function test_NoTransformerForSave() {
+        $this->setExpectedException('Q\Exception', "Unable to save setting to '{$this->file}': Transformer is not set.");
+        $config = new Config_File();
+        $config['a'] = 10;
+        $config->setPath($this->file);
+        $config->save();
+    }
+
+    /**
+     *  Test Config_File() : exception -> unable to set transfromer - transformer already set
+     */
+    public function test_setTransformerException() {
+        $config = new Config_File($this->file);
+        $this->setExpectedException('Q\Exception', "Unable to set 'mock' to Config_File object: Transformer 'mock' is already set.");
+        $config->setTransformer('mock');
+    }
+    
 }
