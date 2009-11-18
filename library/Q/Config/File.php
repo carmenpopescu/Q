@@ -53,18 +53,16 @@ class Config_File extends Config
      */
     public function __construct($path=null, $options=array())
     {
-        if (is_array($path)) {
-            $options = $path + $options;
-            $path = null;
+        $options = (is_array($path) ? $path : array('path'=>$path)) + $options;
+        $path = null;
         
-            if (isset($options['driver'])) {
-                if (isset($options[0])) {
-                    if (!isset($options['path'])) $options['path'] = $options[0];
-                    if (!isset($options['ext'])) $options['ext'] = $options['driver'];
-                    unset($options[0]);
-                } else {
-                    $options[0] = $options['driver'];
-                }
+        if (isset($options['driver'])) {
+            if (isset($options[0])) {
+                if (!isset($options['path'])) $options['path'] = $options[0];
+                if (!isset($options['ext'])) $options['ext'] = $options['driver'];
+                unset($options[0]);
+            } else {
+                $options[0] = $options['driver'];
             }
         }
         
@@ -77,20 +75,22 @@ class Config_File extends Config
             }
         }
         
-        $this->_path = $this->setPath(isset($path) ? $path: (isset($options['path']) ? $options['path'] : null));
-        
-        $this->_ext = isset($options['ext']) ? $options['ext'] : (isset($this->_path) ? $this->_path->extension() : null);
+        if (isset($options['ext'])) $this->_ext = $options['ext'];
         
         if (isset($options['transformer'])) {
-            $this->_transformer = $options['transformer'] instanceof Transformer ? $options['transformer'] : Transform::with($options['transformer']);
+            $this->setTransformer($options['transformer']);
             if (empty($this->_ext)) $this->_ext = $this->_transformer->ext;
-        } elseif (!empty($this->_ext)) {
+        } elseif (!empty($this->_ext)) {            
+            $this->_ext = $options['ext'];
             $this->_transformer = Transform::from($this->_ext);
         }
         
+        if (isset($options['path'])) $this->setPath($options['path']);
+                
         $values = array();
         if (isset($this->_path) && $this->_path instanceof Fs_File && $this->_path->exists()) {
             if (!isset($this->_transformer)) throw new Exception("Unable to initialize Config_File object: Transformer is not set.");
+
             $values = $this->_transformer->process($this->_path);
             if (empty($values)) $values = array();
         }
@@ -98,34 +98,44 @@ class Config_File extends Config
     }
 
     /**
-     * Set file path
+     * Set file path.
      * 
-     * @param string|Fs_Dir $path
-     * @return Fs_Dir
+     * @param string|Fs_File $path
+     * @return Fs_File
      */
-    public function setPath($path=null) {
+    public function setPath($path)
+    {
         if (isset($this->_path)) throw new Exception("Unable to set '$path' to Config_File object: Config_File path '{$this->_path}' is already set.");
-        $this->_path = (isset($path) ? Fs::file($path) : null);
+        
+        if (!($path instanceof Fs_File)) $path = Fs::file($path);
+        $this->_path = $path;
+        
+        if (!isset($this->_ext) && isset($this->_path)) $this->_ext = $this->_path->extension();
+        if (!isset($this->_transformer) && !empty($this->_ext)) $this->_transformer = Transform::from($this->_ext);
+                
         return $this->_path;
     }
 
     /**
-     * Get directory path
+     * Get file path.
      * 
-     * @return Fs_Dir
+     * @return Fs_File
      */
-    public function getPath() {
+    public function getPath()
+    {
         return $this->_path;
     }
 
     /**
      * Set transformer
      * 
-     * @param string|Transform $transformer
+     * @param Transformer|string $transformer  Transformer or DSN string
      * @return Transformer
      */
-    public function setTransformer($transformer) {
+    public function setTransformer($transformer)
+    {
         if (isset($this->_transformer)) throw new Exception("Unable to set '".($transformer instanceof Transformer ? $transformer->ext : $transformer)."' to Config_File object: Transformer '{$this->_transformer->ext}' is already set.");
+        
         $this->_transformer = $transformer instanceof Transformer ? $transformer : Transform::with($transformer);       
         return $this->_transformer;
     }
@@ -140,5 +150,4 @@ class Config_File extends Config
 
         $this->_transformer->getReverse()->save($this->_path, (array)$this, $flags);
     }
-        
 }

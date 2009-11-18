@@ -37,7 +37,6 @@ class Config extends \ArrayObject
 	static public function with($dsn, $options=array())
 	{
 		$options = extract_dsn($dsn) + (array)$options;
-		
 		if (get_called_class() !== __CLASS__) {
 		    $class = get_called_class();
 		    return new $class($options);

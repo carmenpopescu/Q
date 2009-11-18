@@ -27,6 +27,8 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         touch("{$this->dir}/dir1/file3.mock");
         touch("{$this->dir}/dir1/file4.mock");
         
+        $this->file = "{$this->dir}/file1.mock";
+        
         Q\Transform::$drivers['from-mock'] = 'Config_Mock_Unserialize';
     }
     
@@ -35,12 +37,25 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
      */
     protected function tearDown()
     {
-        unlink("{$this->dir}/file1.mock");
-        unlink("{$this->dir}/file2.mock");
-        unlink("{$this->dir}/dir1/file3.mock");
-        unlink("{$this->dir}/dir1/file4.mock");
-        rmdir("{$this->dir}/dir1");
-        rmdir($this->dir);
+        if (file_exists("{$this->dir}/file1.mock")) unlink("{$this->dir}/file1.mock");
+        if (file_exists("{$this->dir}/file2.mock")) unlink("{$this->dir}/file2.mock");
+        if (file_exists("{$this->dir}/dir1/file3.mock")) unlink("{$this->dir}/dir1/file3.mock");
+        if (file_exists("{$this->dir}/dir1/file4.mock")) unlink("{$this->dir}/dir1/file4.mock");
+        if (file_exists("{$this->dir}/dir1")) rmdir("{$this->dir}/dir1");
+
+        if (file_exists(sys_get_temp_dir().'/def/xyz.mock')) unlink(sys_get_temp_dir().'/def/xyz.mock');   
+        if (file_exists(sys_get_temp_dir().'/def')) rmdir(sys_get_temp_dir().'/def');   
+
+        if (file_exists($this->dir."/abc.mock")) unlink($this->dir."/abc.mock");
+        if (file_exists($this->dir."/def.mock")) unlink($this->dir."/def.mock");
+
+        if (file_exists(sys_get_temp_dir().'/abc/def/xy/abc.mock')) unlink(sys_get_temp_dir().'/abc/def/xy/abc.mock');   
+        if (file_exists(sys_get_temp_dir().'/abc/def/xy/dd.mock')) unlink(sys_get_temp_dir().'/abc/def/xy/dd.mock');   
+        if (file_exists(sys_get_temp_dir().'/abc/def/xy')) rmdir(sys_get_temp_dir().'/abc/def/xy');   
+        if (file_exists(sys_get_temp_dir().'/abc/def')) rmdir(sys_get_temp_dir().'/abc/def');   
+        if (file_exists(sys_get_temp_dir().'/abc')) rmdir(sys_get_temp_dir().'/abc');   
+        
+        if (file_exists($this->dir)) rmdir($this->dir);
         
         Config_Mock_Unserialize:$created = array();
         unset(Q\Transform::$drivers['from-mock']);
@@ -528,6 +543,15 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         $this->checkWithTrResult($config);
     }    
     
+    /**
+     * Tests Config:with() -> us a driver dir and a file instead of a dir 
+     */
+    public function test_UserFileWithDrDir()
+    {
+        $this->setExpectedException('Q\Exception', "File '{$this->file}' is not a directory, but a file");
+        $config = Config::with("dir:mock:{$this->file}");
+    }
+    
     
     // Method tests
     
@@ -536,39 +560,42 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
      */
     public function testDir_EagerLoad()
     {
-/*        
-        $config = new Config_Dir($this->dir, array('transformer'=>'from-mock', 'ext'=>'mock','loadall' => true));
-//        var_dump((array)$config['dir1']);
+        $config = new Config_Dir($this->dir, array('transformer'=>'from-mock', 'ext'=>'mock','loadall'=>true));
 
         $this->assertEquals('myuser', $config['file1']['db']['user']);
         $values = (array)$config;
         
         $this->assertEquals('xml', $config['dir1']['file3']['output']);
-*/
     }    
     
     /**
      * Tests Config_Dir(): eager load 
      */
-    public function testDir_lazyLoad()
+    public function testDir_LazyLoad()
     {
         $config = new Config_Dir($this->dir, array('transformer'=>'from-mock', 'ext'=>'mock'));
 
         $this->assertType('Q\Config_Dir', $config);
         $this->assertEquals(array(), (array)$config);
         
-        $config['file1']['db']['user'] = 'this is a test';
-        $this->assertType('Q\Config_File', $config['file1']);
-        $this->assertEquals(array("db"=>array("host"=>"localhost", "dbname"=>"test","user"=>"this is a test","pwd"=>"mypwd"),"output"=>"xml","input"=>"json"), (array)$config['file1']);
-        
-        $this->assertType('Q\Config_Dir', $config['dir1']);
-        $this->assertEquals(array(), (array)$config['dir1']);
-    }    
+        $cfg_file1 = $config['file1'];
+        $this->assertType('Q\Config_File', $cfg_file1);
+        $this->assertEquals(array("db"=>array("host"=>"localhost", "dbname"=>"test","user"=>"myuser","pwd"=>"mypwd"),"output"=>"xml","input"=>"json"), (array)$cfg_file1);
+        $this->assertArrayHasKey('file1', (array)$config);
+        $this->assertArrayNotHasKey('dir1', (array)$config);
+
+        $cfg_dir1 = $config['dir1'];
+        $this->assertType('Q\Config_Dir', $cfg_dir1);
+        $this->assertEquals(array(), (array)$cfg_dir1);
+        $this->assertArrayHasKey('file1', (array)$config);
+        $this->assertArrayHasKey('dir1', (array)$config);        
+    }
 
     /**
      * Tests Config_Dir() : check if the path is setted correct an object
      */
-    public function testDir_getPath() {
+    public function testDir_GetPath()
+    {
         $config = Config::with($this->dir);
         
         $config['abc'] = new Config_File(array('ext'=>'mock'));        
@@ -584,7 +611,8 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      * Tests Config_Dir() : save
      */
-    public function testDir_Save() {
+    public function testDir_Save()
+    {
         $config = Config::with($this->dir);
         $config['abc'] = new Config_File(array('ext'=>'mock'));
         $config['abc']['a'] = 20;
@@ -602,17 +630,15 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         $this->assertType('Q\Config_File', $config);
         $this->assertEquals($mock_abc->reverse->out, serialize((array)$config['abc']));
         $this->assertEquals($mock_def->reverse->out, serialize((array)$config['def']));
-        $this->assertEquals(2, count(Config_Mock_Unserialize::$created));        
-
-        unlink($this->dir."/abc.mock");
-        unlink($this->dir."/def.mock");
+        $this->assertEquals(2, count(Config_Mock_Unserialize::$created));
     }
 
 
     /**
-     * Tests Config_Dir() : save
+     * Tests Config_Dir() : save -> adding only Config_Dir nodes
      */
-    public function testDir_SaveUseConfDirObj() {
+    public function testDir_SaveUseConfDirObj()
+    {
         $config = Config::with('yaml:'.sys_get_temp_dir().'/abc');
         $config->def = new Config_Dir();
         $config->save();
@@ -623,15 +649,13 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         
         $this->assertType('Q\Config_Dir', $config->def);
         $this->assertTrue(is_dir((string)$config->def->getPath()));
-        
-        if (file_exists(sys_get_temp_dir().'/abc/def')) rmdir(sys_get_temp_dir().'/abc/def');   
-        if (file_exists(sys_get_temp_dir().'/abc')) rmdir(sys_get_temp_dir().'/abc');   
     }
 
     /**
-     * Tests Config_Dir() : save
+     * Tests Config_Dir() : save -> adding only an array
      */
-    public function testDir_SaveUseArray() {
+    public function testDir_SaveUseArray()
+    {
         $config = Config::with('mock:'.sys_get_temp_dir().'/def');
         $config['xyz'] = array('a'=>'b');
         $config->save();
@@ -644,16 +668,13 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(sys_get_temp_dir()."/def/xyz.mock", (string)$config['xyz']->getPath());
         $this->assertTrue(is_file((string)$config['xyz']->getPath()));
         $this->assertEquals('a:1:{s:1:"a";s:1:"b";}', file_get_contents((string)$config['xyz']->getPath()));
-        
-        if (file_exists(sys_get_temp_dir().'/def/xyz.mock')) unlink(sys_get_temp_dir().'/def/xyz.mock');   
-        if (file_exists(sys_get_temp_dir().'/def')) rmdir(sys_get_temp_dir().'/def');   
     }
-
 
     /**
      * Tests Config_Dir() : save -> create Config_Dir object and add as node value another Config_Dir object that at the begining has no path setted
      */
-    public function testDir_SaveStartWithEmptyPath() {
+    public function testDir_SaveStartWithEmptyPath()
+    {
         $conf = new Config_Dir(array('ext'=>'mock'));
         $conf->abc = new Config_File();
         $conf->dd = array();
@@ -679,18 +700,13 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         $this->assertType('Q\Config_File', $config['xy']['dd']);
         $this->assertEquals(sys_get_temp_dir()."/abc/def/xy/dd.mock", (string)$config['xy']['dd']->getPath());
         $this->assertEquals('a:1:{s:4:"test";s:8:"testarea";}', file_get_contents((string)$config['xy']['dd']->getPath()));
-        
-        if (file_exists(sys_get_temp_dir().'/abc/def/xy/abc.mock')) unlink(sys_get_temp_dir().'/abc/def/xy/abc.mock');   
-        if (file_exists(sys_get_temp_dir().'/abc/def/xy/dd.mock')) unlink(sys_get_temp_dir().'/abc/def/xy/dd.mock');   
-        if (file_exists(sys_get_temp_dir().'/abc/def/xy')) rmdir(sys_get_temp_dir().'/abc/def/xy');   
-        if (file_exists(sys_get_temp_dir().'/abc/def')) rmdir(sys_get_temp_dir().'/abc/def');   
-        if (file_exists(sys_get_temp_dir().'/abc')) rmdir(sys_get_temp_dir().'/abc');   
     }
     
     /**
      *  Test Config_Dir() : exception ->path already set
      */
-    public function test_setPathException_PathAlreadySet() {
+    public function test_SetPathException_PathAlreadySet()
+    {
         $this->setExpectedException('Q\Exception', "Unable to set 'a_path' to Config_Dir object: Config_Dir path '{$this->dir}' is already set.");
         $config = new Config_Dir($this->dir);
        
@@ -700,7 +716,8 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      *  Test Config_Dir() : exception -> different transformer for dir and file
      */
-    public function test_offsetSetException_differentTransformers() {
+    public function test_OffsetSetException_DifferentTransformers()
+    {
         $this->setExpectedException('Q\Exception', "Unable to create section 'abc': Extension specified for Config_Dir '{$this->dir}' and extension specified for Config_File object setting are different.");
         $config = new Config_Dir($this->dir, array('ext'=>'mock'));    
         $config['abc'] = new Config_File('yaml:path.yaml');
@@ -709,7 +726,8 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      *  Test Config_Dir() : exception -> trying to set wrong type variable
      */
-    public function test_offsetSetException_WrongValueType() {
+    public function test_OffsetSetException_WrongValueType()
+    {
         $this->setExpectedException('Q\Exception', "Unable to set 'a' to '30' for Config_Dir '{$this->dir}': Creating a section requires setting an array or Config_File object.");
         $config = new Config_Dir($this->dir, array('ext'=>'mock'));    
         $config['a'] = 30;
@@ -718,7 +736,8 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      *  Test Config_Dir() : exception -> no ext specified for dir and file
      */
-    public function test_offsetSetException_NoExt() {
+    public function test_OffsetSetException_NoExt()
+    {
         $this->setExpectedException('Q\Exception', "Unable to create section 'test': No extension specified for Config_Dir '{$this->dir}' or for the Config_File object setting.");
         $config = new Config_Dir($this->dir);    
         $config['test'] = new Config_File();
@@ -727,25 +746,18 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      *  Test Config_Dir() : exception -> no ext specified for dir
      */
-    public function test_offsetSetException_NoExtForDir() {
+    public function test_OffsetSetException_NoExtForDir()
+    {
         $this->setExpectedException('Q\Exception', "Unable to create section 'test': No extension specified for Config_Dir '{$this->dir}', creating a section requires setting a Config_File object.");
         $config = new Config_Dir($this->dir);    
         $config['test'] = array();
     }
 
     /**
-     *  Test Config_Dir() : exception -> unable to setPath -> no Fs_Node
-     */
-    public function test_offsetSetException_wrongPathType() {
-        $this->setExpectedException('Q\Exception', "Unable to set path for the Config_File children of Config_Dir object : The path of Config_Dir is not a Fs_Node.");
-        $config = new Config_Dir(array('ext'=>'mock'));
-        $config->setChildrenPath(new Config_Dir(), 'test', 'testarea');
-    }
-
-    /**
      *  Test Config_Dir() : exception -> loadAll - no path specified
      */
-    public function test_loadAllException_noPath() {
+    public function test_LoadAllException_NoPath()
+    {
         $this->setExpectedException('Q\Exception', "Unable to create Config object: Path not specified.");
         $config = new Config_Dir(array('ext'=>'mock'), array('loadall'=> 'true'));
     }
@@ -753,10 +765,10 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     /**
      *  Test Config_Dir() : exception -> loadAll - no path specified
      */
-    public function test_saveException_noPath() {
+    public function test_SaveException_NoPath()
+    {
         $this->setExpectedException('Q\Exception', "Unable to save setting: Path not specified.");
         $config = new Config_Dir();
         $config->save();
     }
-    
 }

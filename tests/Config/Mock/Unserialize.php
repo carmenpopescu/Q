@@ -2,7 +2,10 @@
 use Q\Transform;
 
 require_once 'Q/Transform.php';
-require_once('Serialize.php');
+require_once 'Serialize.php';
+
+Transform::$drivers['from-mock'] = 'Config_Mock_Unserialize';
+
 /**
  * Mock object for unserialize transformer used in Config unit tests.
  * 

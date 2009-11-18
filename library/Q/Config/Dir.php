@@ -34,9 +34,16 @@ class Config_Dir extends Config_File
      * @param string|Fs_Dir $path
      * @return Fs_Dir
      */
-    public function setPath($path=null) {
+    public function setPath($path=null)
+    {
         if (isset($this->_path)) throw new Exception("Unable to set '$path' to Config_Dir object: Config_Dir path '{$this->_path}' is already set.");
+        
         $this->_path = (isset($path) ? Fs::dir($path) : null);
+        
+        foreach ($this as $key=>$config) {
+            $config->setPath($config instanceof Config_Dir ? $this->_path->dir($key) : $this->_path->file("$key.{$config->_ext}"));
+        }
+        
         return $this->_path;
     }
     
@@ -56,21 +63,19 @@ class Config_Dir extends Config_File
      * ArrayAccess; Assigns a value to the specified offset. 
      * 
      * @param string            $key
-     * @param Config_File|array $value
+     * @param Config_File|array $config
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $config)
     {
-        if (is_scalar($value) || is_resource($value)) throw new Exception("Unable to set '$key' to '$value' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object.");
+        if (is_scalar($config) || is_resource($config)) throw new Exception("Unable to set '$key' to '$config' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object.");
         
-       if ($value instanceof Config_File) {
-            $config = $value;
-
+       if ($config instanceof Config_File) {
             if (!empty($config->_ext) && !empty($this->_ext) && $config->_ext != $this->_ext) throw new Exception("Unable to create section '$key': Extension specified for Config_Dir '{$this->_path}' and extension specified for Config_File object setting are different.");
             if (empty($config->_ext) && empty($this->_ext)) throw new Exception("Unable to create section '$key': No extension specified for Config_Dir '{$this->_path}' or for the Config_File object setting.");
             if (empty($config->_ext)) $config->_ext = $this->_ext;
             
-            if (isset($this->_transformer)) $config->_transformer = $this->_transformer;
-            if (isset($this->_path)) $this->setChildrenPath($this->_path, $key, $config);//$config->setPath($config instanceof Config_Dir ? $this->_path->dir($key) : $this->_path->file("$key.{$config->_ext}"));
+            if (isset($this->_transformer)) $config->setTransformer($this->_transformer);
+            if (isset($this->_path)) $config->setPath($config instanceof Config_Dir ? $this->_path->dir($key) : $this->_path->file("$key.{$config->_ext}"));
 
        } else {
             if (!$this->_ext) throw new Exception("Unable to create section '$key': No extension specified for Config_Dir '{$this->_path}', creating a section requires setting a Config_File object."); 
@@ -78,37 +83,12 @@ class Config_Dir extends Config_File
             $options = array();
             if ($this->_transformer) $options['transformer'] = $this->_transformer;
 
+            $value = $config;
             $config = new Config_File(isset($this->_path) ? array('path'=>$this->_path->file("$key.{$this->_ext}")) : null, $options);
             $config->exchangeArray((array)$value);
        }
        
        parent::offsetSet($key, $config);
-    }
-    
-    /**
-     * Set path recursively for the Config_File children of the Config_dir object
-     * 
-     * @param Fs_Node     $path     Path of the current object
-     * @param string      $key
-     * @param Config_File $config
-     */
-    public function setChildrenPath($path, $key, $config) {
-        if (!($path instanceof Fs_Node)) throw new Exception ("Unable to set path for the Config_File children of Config_Dir object : The path of Config_Dir is not a Fs_Node.");
-        
-        if (isset($config->_path)) unset ($config->_path);
-        if ($config instanceof Config_Dir) {
-            $config->setPath($path->dir($key));
-            foreach ((array)$config as $k=>$value) {  
-                if (isset($value->_path)) unset($value->_path);
-                if ($value instanceof Config_Dir) {
-                    $config->setChildrenPath($config->_path, $k, $value);
-                } elseif ($value instanceof Config_File){
-                    $value->setPath($config->_path->file("$k.{$value->_ext}"));
-                } 
-            }            
-        }elseif ($config instanceof Config_File) {
-            $config->setPath($this->_path->file("$key.{$config->_ext}"));   
-        }
     }
     
     /**
