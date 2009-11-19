@@ -5,3 +5,5 @@ ini_set("error_prepend_string", null);
 ini_set("error_append_string", null);
 
 require_once('PHPUnit/Framework/TestCase.php');
+require_once 'vfsStream/vfsStream.php';
+require_once 'vfsStream/vfsStreamDirectory.php';

@@ -1,16 +1,36 @@
 <?php
-use Q\Transform;
+use Q\Transform, Q\Fs;
 
 require_once 'TestHelper.php';
 require_once 'PHPUnit/TextUI/TestRunner.php';
 
 require_once 'Q/Transform.php';
+require_once 'Q/Fs.php';
 
 /**
  * Test factory method
  */
 class Transform_Test extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * Prepares the environment before running a test.
+     */
+    protected function setUp()
+    {
+        parent::setUp();
+    }
+    
+    /**
+     * Cleans up the environment after running a test.
+     */
+    protected function tearDown()
+    {
+        if (isset($this->file) &&file_exists($this->file)) unlink($this->file);
+        if (isset($this->tmpfile) && file_exists($this->tmpfile)) unlink($this->tmpfile);
+        parent::tearDown();
+    }
+    
+   
     /**
      * Test driver xsl
      */
@@ -35,12 +55,13 @@ class Transform_Test extends \PHPUnit_Framework_TestCase
      */
     public function testDriver_Options()
     {
-        $tmpfile = tempnam(sys_get_temp_dir(), 'Q-');
-        file_put_contents($tmpfile, "<body>
+        $this->file = tempnam(sys_get_temp_dir(), 'Q-testTr-file-'.md5(uniqid()));
+        file_put_contents($this->file, "<body>
   Hello i'm ###name###. I was very cool @ ###a###.
 </body>");
 
-        $transform = Transform::with('from-json:file='.$tmpfile.';marker=###%s###;');
+        
+        $transform = Transform::with('from-json:file='.$this->file.';marker=###%s###;');
         $this->assertType('Q\Transform_Unserialize_Json', $transform);
         $this->assertEquals('###%s###', $transform->marker);
         $this->assertEquals("<body>
@@ -104,5 +125,15 @@ class Transform_Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('testarea1', $transform->test1);
         $this->assertEquals('testarea2', $transform->test2);
     }
-}
 
+    /**
+     *  Test Transform::with() -> when using multiple transformers separated by +
+     */
+    public function testwith_MultipleTransformers()
+    {
+        $transform = Transform::with('from-xml + to-yaml:secret=bla + from-yaml');
+        $this->assertType('Q\Transform_Unserialize_Yaml', $transform);
+        $this->assertType('Q\Transform_Serialize_Yaml', $transform->getChainInput());
+        $this->assertType('Q\Transform_Unserialize_XML', $transform->getChainInput()->getChainInput());    
+    }
+}

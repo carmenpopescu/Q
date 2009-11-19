@@ -17,6 +17,13 @@ require_once 'Transform/Unserialize/YamlTest.php';
 require_once 'Transform/Serialize/IniTest.php';
 require_once 'Transform/Unserialize/IniTest.php';
 
+require_once 'Transform/Crypt/MD5Test.php';
+require_once 'Transform/Crypt/MCryptTest.php';
+require_once 'Transform/Crypt/HashTest.php';
+require_once 'Transform/Crypt/CRC32Test.php';
+
+require_once 'Transform/Decrypt/MCryptTest.php';
+
 /**
  * Static test suite.
  */
@@ -44,6 +51,11 @@ class TransformTest extends PHPUnit_Framework_TestSuite
         $this->addTestSuite('Transform_Serialize_YamlTest');
         $this->addTestSuite('Transform_Unserialize_IniTest');
         $this->addTestSuite('Transform_Serialize_IniTest');
+        $this->addTestSuite('Transform_Crypt_MD5Test');
+        $this->addTestSuite('Transform_Crypt_MCryptTest');
+        $this->addTestSuite('Transform_Crypt_Hashtest');
+        $this->addTestSuite('Transform_Crypt_CRC32Test');
+        $this->addTestSuite('Transform_Decrypt_MCryptTest');        
     }
     
     /**

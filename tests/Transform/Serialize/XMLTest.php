@@ -176,4 +176,21 @@ class Transform_Serialize_XMLTest extends PHPUnit_Framework_TestCase
         
         $this->assertEquals('reverse of mock transformer', $transform->getReverse());
     }
+    
+    /**
+     * Tests Transform_Serialize_XML->getReverse() with a chain
+     */
+    public function testGetReverse_ChainDouble() 
+    {
+        $mock = $this->getMock('Q\Transform', array('getReverse', 'process'));
+        $mock->expects($this->once())->method('getReverse')->with($this->isInstanceOf('Q\Transform_Unserialize_XML'))->will($this->returnValue('reverse of mock transformer'));
+        
+        $transform1 = new Transform_Serialize_XML();
+        $transform2 = new Transform_Serialize_XML();
+        
+        $transform2->chainInput($mock);
+        $transform1->chainInput($transform2);
+        
+        $this->assertEquals('reverse of mock transformer', $transform1->getReverse());
+    }
 }
