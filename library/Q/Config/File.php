@@ -55,7 +55,7 @@ class Config_File extends Config
     {
         $options = (is_array($path) ? $path : array('path'=>$path)) + $options;
         $path = null;
-        
+
         if (isset($options['driver'])) {
             if (isset($options[0])) {
                 if (!isset($options['path'])) $options['path'] = $options[0];
@@ -90,8 +90,8 @@ class Config_File extends Config
         $values = array();
         if (isset($this->_path) && $this->_path instanceof Fs_File && $this->_path->exists()) {
             if (!isset($this->_transformer)) throw new Exception("Unable to initialize Config_File object: Transformer is not set.");
-
-            $values = $this->_transformer->process($this->_path);
+            
+            $values = $this->_transformer->process($this->_path);            
             if (empty($values)) $values = array();
         }
         \ArrayObject::__construct(&$values, \ArrayObject::ARRAY_AS_PROPS);
@@ -134,9 +134,10 @@ class Config_File extends Config
      */
     public function setTransformer($transformer)
     {
-        if (isset($this->_transformer)) throw new Exception("Unable to set '".($transformer instanceof Transformer ? $transformer->ext : $transformer)."' to Config_File object: Transformer '{$this->_transformer->ext}' is already set.");
-        
+        if (isset($this->_transformer)) throw new Exception("Unable to set '".($transformer instanceof Transformer ? $transformer->ext : $transformer)."' to Config_File object: Transformer '{$this->_transformer->ext}' is already set.");      
+
         $this->_transformer = $transformer instanceof Transformer ? $transformer : Transform::with($transformer);       
+                
         return $this->_transformer;
     }
     
@@ -147,7 +148,6 @@ class Config_File extends Config
     {
         if (!isset($this->_path)) throw new Exception("Unable to save setting: Path is not set");
         if (!isset($this->_transformer)) throw new Exception("Unable to save setting to '{$this->_path}': Transformer is not set.");
-
         $this->_transformer->getReverse()->save($this->_path, (array)$this, $flags);
     }
 }

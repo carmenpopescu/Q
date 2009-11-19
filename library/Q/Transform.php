@@ -49,7 +49,13 @@ abstract class Transform implements Transformer
 	  'from-php' => 'Q\Transform_Unserialize_PHP',
       'from-yaml' => 'Q\Transform_Unserialize_Yaml',
       'from-ini' => 'Q\Transform_Unserialize_Ini',
-	);
+	
+	  'encrypt-md5' => 'Q\Transform_Crypt_MD5',
+      'encrypt-crc32' => 'Q\Transform_Crypt_CRC32',
+      'encrypt-hash' => 'Q\Transform_Crypt_Hash',
+      'encrypt-mcrypt' => 'Q\Transform_Crypt_MCrypt',
+      'decrypt-mcrypt' => 'Q\Transform_Decrypt_MCrypt'
+      );
 	
     /**
      * Next transform item in the chain
@@ -57,6 +63,30 @@ abstract class Transform implements Transformer
      */
     protected $chainInput;
 	
+    
+    /**
+     * Extract the connection parameters from a DSN string.
+     * Returns array(driver, filters, props)
+     * 
+     * @param string|array $dsn
+     * @return array
+     */
+    static public function extractDSN($dsn)
+    {
+        $matches = null;
+        
+        //set chain if multiple transformers are set  
+        if (is_string($dsn) && strpos($dsn, '+') !== false && preg_match_all('/(?:(?:\"(?:[^\"\\\\]++|\\\\.)++\")|(?:\'(?:[^\'\\\\]++|\\\\.)++\')|[^\+\"\']++)++/', $dsn, $matches) >= 2) {
+            $settings = $matches[0];
+            foreach ($settings as $key=>$value) {
+                $settings[$key] = extract_dsn(trim($value));
+            }            
+        } else {
+            $settings = array(extract_dsn($dsn));
+        }
+        
+        return $settings;
+    }
     
 	/**
 	 * Create a new Transformer.
@@ -68,20 +98,28 @@ abstract class Transform implements Transformer
 	public static function with($dsn, $options=array())
 	{
 	    $prefix = func_num_args() > 2 ? func_get_arg(2) . '-' : '';
-		$options = (is_scalar($dsn) ? extract_dsn($dsn) : (array)$dsn) + (array)$options;
-        if (!isset($options['driver']) && !isset($options[0])) throw new Exception("Unable to create Transform object: No driver specified");
-        $driver = $prefix . (isset($options['driver']) ? $options['driver'] : $options[0]);
+		$settings = self::extractDSN($dsn);
 		
-		if (!isset(self::$drivers[$driver]) && strpos($driver, '.') !== false && isset(self::$drivers[$prefix . pathinfo($driver, PATHINFO_EXTENSION)])) {
-		    if (isset($options['driver'])) $options[0] = $options['driver'];
-		    $driver = $prefix . pathinfo($driver, PATHINFO_EXTENSION);
+		foreach ($settings as $set) {
+		    $set = $set + $options;
+            if (!isset($set['driver']) && !isset($set[0])) throw new Exception("Unable to create Transform object: No driver specified");
+            $driver = $prefix . (isset($set['driver']) ? $set['driver'] : $set[0]);
+    		
+    		if (!isset(self::$drivers[$driver]) && strpos($driver, '.') !== false && isset(self::$drivers[$prefix . pathinfo($driver, PATHINFO_EXTENSION)])) {
+    		    if (isset($set['driver'])) $set[0] = $set['driver'];
+    		    $driver = $prefix . pathinfo($driver, PATHINFO_EXTENSION);
+    		}
+    
+    		if (!isset(self::$drivers[$driver])) throw new Exception("Unable to create Transform object: Unknown driver '$driver'");
+    		$class = self::$drivers[$driver];
+    		if (!load_class($class)) throw new Exception("Unable to create $class object: Class does not exist.");
+
+    		$transformer = new $class($set);
+    		if (isset($prev)) $transformer->chainInput($prev);
+    		$prev = $transformer;
 		}
-
-		if (!isset(self::$drivers[$driver])) throw new Exception("Unable to create Transform object: Unknown driver '$driver'");
-		$class = self::$drivers[$driver];
-		if (!load_class($class)) throw new Exception("Unable to create $class object: Class does not exist.");
-
-		return new $class($options);
+		
+		return $transformer;
 	}
 	
     /**
@@ -132,6 +170,15 @@ abstract class Transform implements Transformer
         $this->chainInput = $transform;
     }
     
+    /**
+     * Get the chainInput
+     *
+     * @return Transform $this->chainInput
+     */
+    public function getChainInput()
+    {
+        return $this->chainInput;
+    }
     
     /**
      * Magic method when object is used as function; Alias of Transform::process().

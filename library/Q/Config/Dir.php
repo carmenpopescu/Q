@@ -56,7 +56,7 @@ class Config_Dir extends Config_File
      */
     public function offsetExists($key)
     {
-        return parent::offsetExists($key) || is_dir("{$this->_path}/{$key}") || isset($this->_ext) ? file_exists("{$this->_path}/{$key}.{$this->_ext}") : glob("{$this->_path}/{$key}.*");
+        return parent::offsetExists($key) || is_dir("{$this->_path}/{$key}") || (isset($this->_ext) ? file_exists("{$this->_path}/{$key}.{$this->_ext}") : count(glob("{$this->_path}/{$key}.*")) > 0);
     }
     
     /**
@@ -67,7 +67,7 @@ class Config_Dir extends Config_File
      */
     public function offsetSet($key, $config)
     {
-        if (is_scalar($config) || is_resource($config)) throw new Exception("Unable to set '$key' to '$config' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object.");
+       if (is_scalar($config) || is_resource($config)) throw new Exception("Unable to set '$key' to '$config' for Config_Dir '{$this->_path}': Creating a section requires setting an array or Config_File object.");
         
        if ($config instanceof Config_File) {
             if (!empty($config->_ext) && !empty($this->_ext) && $config->_ext != $this->_ext) throw new Exception("Unable to create section '$key': Extension specified for Config_Dir '{$this->_path}' and extension specified for Config_File object setting are different.");
@@ -143,12 +143,14 @@ class Config_Dir extends Config_File
         if ($this->_ext) $options['ext'] = $this->_ext;
         $options['loadall'] = true;
         
-        foreach ($this->_path as $key=>$file) {  
+        foreach ($this->_path as $key=>$file) {
+            if (parent::offsetExists($file->filename())) continue;
+            
             if ($file instanceof Fs_Dir) {
-                if (!isset($this[$file->filename()])) parent::offsetSet($file->filename(), new Config_Dir($file, $options));
+                parent::offsetSet($file->filename(), new Config_Dir($file, $options));
             } elseif ($file instanceof Fs_File) {
-                if (isset($this->_ext) && substr($file, -strlen($this->_ext)) != $this->_ext) continue;
-                if (!isset($this[$file->filename()])) parent::offsetSet($file->filename(), new Config_File($file, $options));
+                if (isset($this->_ext) && $file->extension() != $this->_ext) continue;
+                parent::offsetSet($file->filename(), new Config_File($file, $options));
             }
         }
         

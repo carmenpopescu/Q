@@ -22,6 +22,7 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         
         mkdir($this->dir);
         mkdir("{$this->dir}/dir1");
+        mkdir("{$this->dir}/dir2");
         touch("{$this->dir}/file1.mock");
         touch("{$this->dir}/file2.mock");
         touch("{$this->dir}/dir1/file3.mock");
@@ -55,6 +56,7 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
         if (file_exists(sys_get_temp_dir().'/abc/def')) rmdir(sys_get_temp_dir().'/abc/def');   
         if (file_exists(sys_get_temp_dir().'/abc')) rmdir(sys_get_temp_dir().'/abc');   
         
+        if  (file_exists("{$this->dir}/dir2")) rmdir("{$this->dir}/dir2");
         if (file_exists($this->dir)) rmdir($this->dir);
         
         Config_Mock_Unserialize:$created = array();
@@ -562,14 +564,18 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     {
         $config = new Config_Dir($this->dir, array('transformer'=>'from-mock', 'ext'=>'mock','loadall'=>true));
 
-        $this->assertEquals('myuser', $config['file1']['db']['user']);
-        $values = (array)$config;
-        
-        $this->assertEquals('xml', $config['dir1']['file3']['output']);
+        $this->assertType('Q\Config_Dir', $config);
+
+        $this->assertArrayHasKey('dir1', (array)$config);
+        $this->assertArrayHasKey('dir2', (array)$config);
+        $this->assertArrayHasKey('file1', (array)$config);
+
+        $this->assertArrayHasKey('file3', (array)$config['dir1']);
+        $this->assertArrayHasKey('file4', (array)$config['dir1']);        
     }    
     
     /**
-     * Tests Config_Dir(): eager load 
+     * Tests Config_Dir(): lazy load 
      */
     public function testDir_LazyLoad()
     {
@@ -763,12 +769,23 @@ class Config_DirTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     *  Test Config_Dir() : exception -> loadAll - no path specified
+     *  Test Config_Dir() : exception -> try to save when no path specified
      */
     public function test_SaveException_NoPath()
     {
         $this->setExpectedException('Q\Exception', "Unable to save setting: Path not specified.");
         $config = new Config_Dir();
         $config->save();
+    }
+
+    /**
+     * Test Config_Dir:offsetExists() 
+     */
+    public function test_offsetExists() 
+    {
+        $config = new Config_Dir($this->dir);
+        $this->assertTrue($config->offsetExists('dir1'));   
+        $this->assertTrue($config->offsetExists('file1'));   
+        $this->assertFalse($config->offsetExists('sjfhjfhdjfhsdjfhsdj'));           
     }
 }

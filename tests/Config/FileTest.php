@@ -614,4 +614,27 @@ class Config_FileTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('Q\Exception', "Unable to set 'mock' to Config_File object: Transformer 'mock' is already set.");
         $config->setTransformer('mock');
     }
+    
+    /**
+     * Test Config_File() -> use chain
+     */
+    public function test_Chain() {
+        $file = '/tmp/asta_test.yaml';
+        file_put_contents($file, '<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings>
+ <grp1>
+  <q>abc</q>
+  <b>27</b>
+ </grp1>
+ <grp2>
+  <a>original</a>
+ </grp2>
+</settings>
+');
+        $config = Config::with("file:{$file}", array('transformer'=> 'from-xml + to-yaml:secret=bla+from-yaml'));        
+//var_dump((array) $config);
+        $config['x'] = 'y';
+        $config['z'] = array('u'=>'v', 'r'=>'s');
+        $config->save();
+    }
 }
