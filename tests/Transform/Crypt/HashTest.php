@@ -92,4 +92,80 @@ class Transform_Crypt_HashTest extends PHPUnit_Framework_TestCase
 		$this->Crypt_Hash->secret = "s3cret";
 		$this->assertEquals(hash('md5', "a test string" . "s3cret"), $this->Crypt_Hash->process($file));
 	}
+
+    /**
+     * Tests Crypt_Hash->process() with a chain
+     */
+    public function testEncrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue("a test string"));
+        
+        $this->Crypt_Hash->chainInput($mock);
+        $contents = $this->Crypt_Hash->process('test');
+
+        $this->assertType('Q\Transform_Crypt_Hash', $this->Crypt_Hash);
+        $this->assertEquals(hash('md5', "a test string"), $contents);
+    }
+
+    
+    /**
+     * Tests Transform_Crypt_Hash->output()
+     */
+    public function testOutput() 
+    {
+        ob_start();
+        try{
+            $this->Crypt_Hash->output("a test string");
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Crypt_Hash', $this->Crypt_Hash);
+        $this->assertEquals(hash('md5', "a test string"), $contents);
+    }
+
+    /**
+     * Tests Transform_Crypt_Hash->save()
+     */
+    public function testSave() 
+    {
+        $this->Crypt_Hash->save($this->tmpfile, "a test string");
+        
+        $this->assertType('Q\Transform_Crypt_Hash', $this->Crypt_Hash);
+        $this->assertEquals(hash('md5', "a test string"), file_get_contents($this->tmpfile));
+    }    
+
+    /**
+     * Tests Transform_Crypt_Hash->getReverse()
+     */
+    public function testGetReverse() 
+    {
+        $this->setExpectedException('Q\Transform_Exception', 'There is no reverse transformation defined.');
+        $this->Crypt_Hash->getReverse();
+    }
+
+    /**
+     * Tests Transform_Crypt_Hash->process() -null method
+     */
+    public function testProcessException_EmptyMethod() 
+    {
+        $this->setExpectedException('Exception', 'Unable to encrypt: Hashing algoritm not specified.');
+        $transform = new Transform_Crypt_Hash(array('method'=>null));
+        $transform->process('a test string');
+    }
+
+    /**
+     * Tests Transform_Crypt_Hash->process() - unsupported method
+     */
+    public function testProcessException_UnsupportedMethod() 
+    {
+        $method = "a_method";
+        $this->setExpectedException('Exception', "Unable to encrypt: Algoritm '{$method}' is not supported.");
+        $transform = new Transform_Crypt_Hash(array('method'=>$method));
+        $transform->process('a test string');
+    }
 }

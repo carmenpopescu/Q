@@ -54,7 +54,10 @@ abstract class Transform implements Transformer
       'encrypt-crc32' => 'Q\Transform_Crypt_CRC32',
       'encrypt-hash' => 'Q\Transform_Crypt_Hash',
       'encrypt-mcrypt' => 'Q\Transform_Crypt_MCrypt',
-      'decrypt-mcrypt' => 'Q\Transform_Decrypt_MCrypt'
+      'decrypt-mcrypt' => 'Q\Transform_Decrypt_MCrypt',
+      'encrypt-openssl' => 'Q\Transform_Crypt_OpenSSL',
+      'decrypt-openssl' => 'Q\Transform_Decrypt_OpenSSL',
+      'encrypt-system' => 'Q\Transform_Crypt_System'
       );
 	
     /**

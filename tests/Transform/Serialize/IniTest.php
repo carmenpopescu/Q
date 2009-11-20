@@ -138,4 +138,21 @@ a = "original"
         
         $this->assertEquals('reverse of mock transformer', $transform->getReverse());
     }
+
+    /**
+     * Tests Transform_Serialize_Ini->getReverse() with a chain
+     */
+    public function testGetReverse_ChainDouble() 
+    {
+        $mock = $this->getMock('Q\Transform', array('getReverse', 'process'));
+        $mock->expects($this->once())->method('getReverse')->with($this->isInstanceOf('Q\Transform_Unserialize_Ini'))->will($this->returnValue('reverse of mock transformer'));
+        
+        $transform1 = new Transform_Serialize_Ini();
+        $transform2 = new Transform_Serialize_Ini();
+        
+        $transform2->chainInput($mock);
+        $transform1->chainInput($transform2);
+        
+        $this->assertEquals('reverse of mock transformer', $transform1->getReverse());
+    }
 }

@@ -72,13 +72,13 @@ class Transform_Crypt_MCryptTest extends PHPUnit_Framework_TestCase
      */
 	public function testGetReverse()
     {
-        $this->Crypt_MCrypt->getReverse();
-        $this->assertType('Q\Transform_Crypt_Unserialize_MCrypt', $reverse);
+        $reverse = $this->Crypt_MCrypt->getReverse();
+        $this->assertType('Q\Transform_Decrypt_MCrypt', $reverse);
     }
+
     /**
      * Tests Crypt_MCrypt->getReverse() with a chain
-     */
-/*    
+     */   
     public function testGetReverse_Chain() 
     {
         $mock = $this->getMock('Q\Transform', array('getReverse', 'process'));
@@ -87,6 +87,5 @@ class Transform_Crypt_MCryptTest extends PHPUnit_Framework_TestCase
         $this->Crypt_MCrypt->chainInput($mock);
         
         $this->assertEquals('reverse of mock transformer', $this->Crypt_MCrypt->getReverse());
-    }    
-*/    
+    }
 }

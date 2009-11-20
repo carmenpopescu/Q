@@ -32,6 +32,8 @@ class Transform_Decrypt_MCrypt extends Transform_Crypt
      */
     public function __construct($options=array())
     {
+        if (is_object($options)) return parent::__construct($options);
+        
         $options = (array)$options;
         if (isset($options[0])) $options['method'] = $options[0];
         unset($options[0]);

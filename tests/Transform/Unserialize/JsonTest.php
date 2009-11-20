@@ -3,6 +3,7 @@ use Q\Transform_Unserialize_Json, Q\Transform;
 
 require_once 'TestHelper.php';
 require_once 'Q/Transform/Unserialize/Json.php';
+require_once 'Q/Fs/Node.php';
 
 /**
  * Transform_Unserialize_Json test case.
@@ -111,5 +112,22 @@ class Transform_Unserialize_JsonTest extends PHPUnit_Framework_TestCase
         $transform->chainInput($mock);
         
         $this->assertEquals('reverse of mock transformer', $transform->getReverse());
+    }
+
+    /**
+     * Tests Transform_Unserialize_Json->getReverse() with a chain
+     */
+    public function testGetReverse_ChainDouble() 
+    {
+        $mock = $this->getMock('Q\Transform', array('getReverse', 'process'));
+        $mock->expects($this->once())->method('getReverse')->with($this->isInstanceOf('Q\Transform_Serialize_Json'))->will($this->returnValue('reverse of mock transformer'));
+        
+        $transform1 = new Transform_Unserialize_Json();
+        $transform2 = new Transform_Unserialize_Json();
+        
+        $transform2->chainInput($mock);
+        $transform1->chainInput($transform2);
+        
+        $this->assertEquals('reverse of mock transformer', $transform1->getReverse());
     }
 }

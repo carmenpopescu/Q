@@ -21,8 +21,11 @@ require_once 'Transform/Crypt/MD5Test.php';
 require_once 'Transform/Crypt/MCryptTest.php';
 require_once 'Transform/Crypt/HashTest.php';
 require_once 'Transform/Crypt/CRC32Test.php';
+require_once 'Transform/Crypt/OpenSSLTest.php';
+require_once 'Transform/Crypt/SystemTest.php';
 
 require_once 'Transform/Decrypt/MCryptTest.php';
+require_once 'Transform/Decrypt/OpenSSLTest.php';
 
 /**
  * Static test suite.
@@ -56,6 +59,9 @@ class TransformTest extends PHPUnit_Framework_TestSuite
         $this->addTestSuite('Transform_Crypt_Hashtest');
         $this->addTestSuite('Transform_Crypt_CRC32Test');
         $this->addTestSuite('Transform_Decrypt_MCryptTest');        
+        $this->addTestSuite('Transform_Crypt_OpenSSLTest'); 
+        $this->addTestSuite('Transform_Decrypt_OpenSSLTest');        
+        $this->addTestSuite('Transform_Crypt_SystemTest');
     }
     
     /**

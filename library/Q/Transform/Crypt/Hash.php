@@ -46,10 +46,10 @@ class Transform_Crypt_Hash extends Transform_Crypt
 	 */
 	public function process($value, $salt=null)
 	{
-        if ($this->chainInput) $data = $this->chainInput->process($data);
+        if ($this->chainInput) $value = $this->chainInput->process($value);
 	    
-        if (empty($this->method)) throw new Exception("Unable to encrypt; Hashing algoritm not specified.");
-        if (!in_array($this->method, hash_algos())) throw new Exception("Unable to encrypt; Algoritm '$this->method' is not supported.");
+        if (empty($this->method)) throw new Exception("Unable to encrypt: Hashing algoritm not specified.");
+        if (!in_array($this->method, hash_algos())) throw new Exception("Unable to encrypt: Algoritm '$this->method' is not supported.");
 
         if ($value instanceof Fs_File) {
 			if (empty($this->secret) && !$this->useSalt) return hash_file($this->method, $value);

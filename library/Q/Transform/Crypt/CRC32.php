@@ -32,7 +32,7 @@ class Transform_Crypt_CRC32 extends Transform_Crypt
 	 */
 	public function process($value, $salt=null)
 	{
-        if ($this->chainInput) $data = $this->chainInput->process($data);
+        if ($this->chainInput) $value = $this->chainInput->process($value);
 	    
         if ($value instanceof Fs_File) $value = $value->getContents();
 		

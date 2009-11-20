@@ -78,4 +78,59 @@ class Transform_Crypt_CRC32Test extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals(sprintf('%08x', crc32("a test string")), $this->Crypt_CRC32->process($file));
 	}
+
+    /**
+     * Tests Crypt_CRC32->process() with a chain
+     */
+    public function testEncrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue("a test string"));
+        
+        $this->Crypt_CRC32->chainInput($mock);
+        $contents = $this->Crypt_CRC32->process('test');
+
+        $this->assertType('Q\Transform_Crypt_CRC32', $this->Crypt_CRC32);
+        $this->assertEquals(sprintf('%08x', crc32("a test string")), $contents);
+    }
+
+    
+    /**
+     * Tests Transform_Crypt_CRC32->output()
+     */
+    public function testOutput() 
+    {
+        ob_start();
+        try{
+            $this->Crypt_CRC32->output("a test string");
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Crypt_CRC32', $this->Crypt_CRC32);
+        $this->assertEquals(sprintf('%08x', crc32("a test string")), $contents);
+    }
+
+    /**
+     * Tests Transform_Crypt_CRC32->save()
+     */
+    public function testSave() 
+    {
+        $this->Crypt_CRC32->save($this->tmpfile, "a test string");
+        
+        $this->assertType('Q\Transform_Crypt_CRC32', $this->Crypt_CRC32);
+        $this->assertEquals(sprintf('%08x', crc32("a test string")), file_get_contents($this->tmpfile));
+    }    
+
+    /**
+     * Tests Transform_Crypt_CRC32->getReverse()
+     */
+    public function testGetReverse() 
+    {
+        $this->setExpectedException('Q\Transform_Exception', 'There is no reverse transformation defined.');
+        $this->Crypt_CRC32->getReverse();
+    }
 }
