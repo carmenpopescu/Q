@@ -51,7 +51,9 @@ class Transform_Crypt_OpenSSL extends Transform_Crypt
 	 */    
     public function process($value, $salt=null)
     {
-    	if ($value instanceof Fs_File) $value = $value->getContents();
+        if ($this->chainInput) $value = $this->chainInput->process($value);
+        
+        if ($value instanceof Fs_File) $value = $value->getContents();
     	
         if (empty($this->secret)) trigger_error("Secret key is not set for OpenSSL password encryption. This is not secure.", E_USER_NOTICE);
         return openssl_encrypt($value, $this->method, $this->secret);

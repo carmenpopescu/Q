@@ -32,6 +32,7 @@ class Transform_Decrypt_OpenSSLTest extends PHPUnit_Framework_TestCase
 	protected function tearDown()
 	{
 		$this->Decrypt_OpenSSL = null;
+        if (file_exists($this->file)) unlink($this->file);
 		parent::tearDown();
 	}
 	
@@ -86,6 +87,53 @@ class Transform_Decrypt_OpenSSLTest extends PHPUnit_Framework_TestCase
 		$encrypted = openssl_encrypt("a test string", 'AES256', 'another secret');
 		$this->Decrypt_OpenSSL->process($encrypted);
 	}
+
+    /**
+     * Tests Decrypt_OpenSSL->process() with a chain
+     */
+    public function testDecrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue(openssl_encrypt("a test string", 'AES256', 's3cret')));
+        $this->Decrypt_OpenSSL->chainInput($mock);
+        $contents = $this->Decrypt_OpenSSL->process('test');
+
+        $this->assertType('Q\Transform_Decrypt_OpenSSL', $this->Decrypt_OpenSSL);
+        $this->assertEquals("a test string", $contents);
+    }
+    
+    /**
+     * Tests Transform_Decrypt_OpenSSL->output()
+     */
+    public function testOutput() 
+    {
+        $encrypted = openssl_encrypt("a test string", 'AES256', 's3cret');
+        ob_start();
+        try{
+            $this->Decrypt_OpenSSL->output($encrypted);
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Decrypt_OpenSSL', $this->Decrypt_OpenSSL);
+        $this->assertEquals("a test string", $contents);
+    }
+    
+    /**
+     * Tests Transform_Decrypt_OpenSSL->save()
+     */
+    public function testSave() 
+    {
+        $encrypted = openssl_encrypt("a test string", 'AES256', 's3cret');
+        $this->Decrypt_OpenSSL->save($this->file, $encrypted);
+        
+        $this->assertType('Q\Transform_Decrypt_OpenSSL', $this->Decrypt_OpenSSL);
+        $this->assertEquals("a test string", file_get_contents($this->file));
+    }    
+
 	
     /**
      * Tests Decrypt_OpenSSL->getReverse()
@@ -124,5 +172,16 @@ class Transform_Decrypt_OpenSSLTest extends PHPUnit_Framework_TestCase
         $transform1->chainInput($transform2);
         
         $this->assertEquals('reverse of mock transformer', $transform1->getReverse());
+    }
+
+    /**
+     * Tests Transform_Decrypt_OpenSSL->process() - no secret string specified
+     */
+    public function testProcessException_NoSecretString() 
+    {
+        $encrypted = openssl_encrypt("a test string", 'AES256', 's3cret');
+        $transform = new Transform_Decrypt_OpenSSL();
+        $this->setExpectedException('Exception', "Failed to decrypt value with {$transform->method} using openssl.");
+        $transform->process($encrypted);
     }
 }

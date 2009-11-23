@@ -55,7 +55,9 @@ class Transform_Crypt_System extends Transform_Crypt
 	 */
 	public function process($value, $salt=null)
 	{
-		if ($value instanceof Fs_File) $value = $value->getContents();
+        if ($this->chainInput) $value = $this->chainInput->process($value);
+	    
+        if ($value instanceof Fs_File) $value = $value->getContents();
 		
 	    $value .= $this->secret;
 	    

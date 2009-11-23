@@ -32,6 +32,7 @@ class Transform_Crypt_OpenSSLTest extends PHPUnit_Framework_TestCase
 	protected function tearDown()
 	{
 		$this->Crypt_OpenSSL = null;
+		if (file_exists($this->file)) unlink($this->file);
 		parent::tearDown();
 	}
 	
@@ -73,7 +74,52 @@ class Transform_Crypt_OpenSSLTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals(openssl_encrypt("a test string", 'AES256', 's3cret'), $this->Crypt_OpenSSL->process($file));
 	}
+
+    /**
+     * Tests Transform_Crypt_OpenSSL->process() with a chain
+     */
+    public function testEncrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue('a test string'));
+        
+        $this->Crypt_OpenSSL->chainInput($mock);
+        $contents = $this->Crypt_OpenSSL->process('test');
+
+        $this->assertType('Q\Transform_Crypt_OpenSSL', $this->Crypt_OpenSSL);
+        $this->assertEquals(openssl_encrypt("a test string", 'AES256', 's3cret'), $contents);
+    }
     
+    /**
+     * Tests Transform_Crypt_OpenSSL->output()
+     */
+    public function testOutput() 
+    {
+        ob_start();
+        try{
+            $this->Crypt_OpenSSL->output("a test string");
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Crypt_OpenSSL', $this->Crypt_OpenSSL);
+        $this->assertEquals(openssl_encrypt("a test string", 'AES256', 's3cret'), $contents);
+    }
+    
+    /**
+     * Tests Transform_Crypt_OpenSSL->save()
+     */
+    public function testSave() 
+    {
+        $this->Crypt_OpenSSL->save($this->file, "a test string");
+        
+        $this->assertType('Q\Transform_Crypt_OpenSSL', $this->Crypt_OpenSSL);
+        $this->assertEquals(openssl_encrypt("a test string", 'AES256', 's3cret'), file_get_contents($this->file));
+    }    
+	
     /**
      * Tests Crypt_OpenSSL->getReverse()
      */
@@ -111,5 +157,15 @@ class Transform_Crypt_OpenSSLTest extends PHPUnit_Framework_TestCase
         $transform1->chainInput($transform2);
         
         $this->assertEquals('reverse of mock transformer', $transform1->getReverse());
+    }
+
+    /**
+     * Tests Transform_Crypt_OpenSSL->process() - no secret string specified
+     */
+    public function testProcessException_NoSecretString() 
+    {
+        $this->setExpectedException('Exception', 'Secret key is not set for OpenSSL password encryption. This is not secure.');
+        $transform = new Transform_Crypt_OpenSSL();
+        $transform->process('something');
     }
 }

@@ -49,10 +49,12 @@ class Transform_Decrypt_OpenSSL extends Transform_Crypt
      */
     public function process($value)
     {
+        if ($this->chainInput) $value = $this->chainInput->process($value);
+        
         if ($value instanceof Fs_File) $value = $value->getContents();
         
         $ret = openssl_decrypt($value, $this->method, $this->secret);
-        if ($ret === false) throw new Transform_Exception("Failed to decrypt value with $this->method using openssl.");
+        if ($ret === false) throw new Transform_Exception("Failed to decrypt value with {$this->method} using openssl.");
         return $ret;
     }
 

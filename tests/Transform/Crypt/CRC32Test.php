@@ -93,7 +93,6 @@ class Transform_Crypt_CRC32Test extends PHPUnit_Framework_TestCase
         $this->assertType('Q\Transform_Crypt_CRC32', $this->Crypt_CRC32);
         $this->assertEquals(sprintf('%08x', crc32("a test string")), $contents);
     }
-
     
     /**
      * Tests Transform_Crypt_CRC32->output()
@@ -132,5 +131,5 @@ class Transform_Crypt_CRC32Test extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException('Q\Transform_Exception', 'There is no reverse transformation defined.');
         $this->Crypt_CRC32->getReverse();
-    }
+    }   
 }

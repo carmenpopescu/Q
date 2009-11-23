@@ -15,9 +15,8 @@ class Transform_Crypt_SystemTest extends PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-        parent::setUp();
-
         $this->file = sys_get_temp_dir() . '/q-crypt_test-' . md5(uniqid());
+        parent::setUp();
     }
     
     /**
@@ -25,6 +24,7 @@ class Transform_Crypt_SystemTest extends PHPUnit_Framework_TestCase
      */
     protected function tearDown()
     {
+        if (file_exists($this->file)) unlink($this->file);
         parent::tearDown();
     }    
     
@@ -118,4 +118,72 @@ class Transform_Crypt_SystemTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(crypt("a test string", $hash), $hash);
 	}
 
+    /**
+     * Tests Transform_Crypt_System->process() with a chain
+     */
+    public function testEncrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue('a test string'));
+        
+        $crypt = new Transform_Crypt_System();
+        $crypt->chainInput($mock);
+        $hash = $crypt->process('test');
+
+        $this->assertType('Q\Transform_Crypt_System', $crypt);
+        $this->assertEquals(crypt("a test string", $hash), $hash);
+    }
+    
+    /**
+     * Tests Transform_Crypt_System->output()
+     */
+    public function testOutput() 
+    {
+        $crypt = new Transform_Crypt_System();
+        
+        ob_start();
+        try{
+            $crypt->output("a test string");
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $hash = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Crypt_System', $crypt);
+        $this->assertEquals(crypt("a test string", $hash), $hash);
+    }
+    
+    /**
+     * Tests Transform_Crypt_System->save()
+     */
+    public function testSave() 
+    {
+        $crypt = new Transform_Crypt_System();
+        $crypt->save($this->file, "a test string");
+        $hash = file_get_contents($this->file);
+        $this->assertType('Q\Transform_Crypt_System', $crypt);
+        $this->assertEquals(crypt("a test string", $hash), $hash);
+    }
+
+    /**
+     * Tests Transform_Crypt_System->getReverse()
+     */
+    public function testGetReverse() 
+    {
+        $crypt = new Transform_Crypt_System();
+        $this->setExpectedException('Q\Transform_Exception', 'There is no reverse transformation defined.');
+        $crypt->getReverse();
+    }
+
+    /**
+     * Tests Transform_Crypt_System->process() -null method
+     */
+    public function testProcessException_WrongMethod() 
+    {
+        $this->setExpectedException('Exception', "Unable to encrypt value: Unknown crypt method 'a_method'");
+        $transform = new Transform_Crypt_System(array('method'=>'a_method'));
+        $transform->process('a test string');
+    }
 }

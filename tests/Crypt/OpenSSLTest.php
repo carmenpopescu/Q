@@ -112,4 +112,13 @@ class Crypt_OpenSSLTest extends PHPUnit_Framework_TestCase
 		$encrypted = openssl_encrypt("a test string", 'AES256', 'another secret');
 		$this->Crypt_OpenSSL->decrypt($encrypted);
 	}
+
+	/**
+     * Tests Transform_Crypt_OpenSSL->process() -null method
+     */
+    public function testProcessException_EmptyMethod() 
+    {
+        $this->setExpectedException('Exception', 'Secret key is not set for OpenSSL password encryption. This is not secure.');
+        $transform = new Transform_Crypt_OpenSSL();
+    }
 }

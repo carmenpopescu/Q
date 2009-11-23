@@ -50,7 +50,7 @@ class Transform_Crypt_MCrypt extends Transform_Crypt
 	 */
 	public function process($value, $salt=null)
 	{
-        if ($this->chainInput) $data = $this->chainInput->process($data);
+        if ($this->chainInput) $value = $this->chainInput->process($value);
 	    
         if (empty($this->method)) throw new Exception("Unable to encrypt: Algoritm not specified.");
 		if (!in_array($this->method, mcrypt_list_algorithms())) throw new Exception("Unable to encrypt: Algoritm '$this->method' is not supported.");

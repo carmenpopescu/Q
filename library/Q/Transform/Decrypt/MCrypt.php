@@ -49,7 +49,7 @@ class Transform_Decrypt_MCrypt extends Transform_Crypt
      */
     public function process($value)
     {
-        if ($this->chainInput) $data = $this->chainInput->process($data);
+        if ($this->chainInput) $value = $this->chainInput->process($value);
         
         if (empty($this->method)) throw new Exception("Unable to decrypt: Algoritm not specified.");
         if (!in_array($this->method, mcrypt_list_algorithms())) throw new Exception("Unable to decrypt: Algoritm '$this->method' is not supported.");

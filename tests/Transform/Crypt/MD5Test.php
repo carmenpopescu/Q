@@ -44,23 +44,7 @@ class Transform_Crypt_MD5Test extends PHPUnit_Framework_TestCase
 		$this->assertEquals(md5('test'), $contents);
 	}
 
-
-    /**
-     * Tests Transform_Crypt_MD5->process() with a chain
-     */
-    public function testEncrypt_Chain() 
-    {
-        $mock = $this->getMock('Q\Transform', array('process'));
-        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue('md5crypt_testarea'));
-        
-        $this->Crypt_MD5->chainInput($mock);
-        $contents = $this->Crypt_MD5->process('test');
-
-        $this->assertType('Q\Transform_Crypt_MD5', $this->Crypt_MD5);
-        $this->assertEquals(md5('md5crypt_testarea'), $contents);
-    }
-    
-    /**
+	/**
      * Tests Transform_Crypt_MD5->process() using salt
      */
     public function testEncrypt_Salt()
@@ -105,4 +89,57 @@ class Transform_Crypt_MD5Test extends PHPUnit_Framework_TestCase
         $this->assertEquals(md5("a test string" . "s3cret"), Transform::encrypt('md5:secret=s3cret')->process($file));
     }
 
+    /**
+     * Tests Transform_Crypt_MD5->process() with a chain
+     */
+    public function testEncrypt_Chain() 
+    {
+        $mock = $this->getMock('Q\Transform', array('process'));
+        $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue('a test string'));
+        
+        $this->Crypt_MD5->chainInput($mock);
+        $contents = $this->Crypt_MD5->process('test');
+
+        $this->assertType('Q\Transform_Crypt_MD5', $this->Crypt_MD5);
+        $this->assertEquals(md5('a test string'), $contents);
+    }
+    
+    /**
+     * Tests Transform_Crypt_MD5->output()
+     */
+    public function testOutput() 
+    {
+        ob_start();
+        try{
+            $this->Crypt_MD5->output("a test string");
+        } catch (Expresion $e) {
+            ob_end_clean();
+            throw $e;
+        }
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertType('Q\Transform_Crypt_MD5', $this->Crypt_MD5);
+        $this->assertEquals(md5('a test string'), $contents);
+    }
+    
+    /**
+     * Tests Transform_Crypt_MD5->save()
+     */
+    public function testSave() 
+    {
+        $this->Crypt_MD5->save($this->tmpfile, "a test string");
+        
+        $this->assertType('Q\Transform_Crypt_MD5', $this->Crypt_MD5);
+        $this->assertEquals(md5('a test string'), file_get_contents($this->tmpfile));
+    }    
+
+    /**
+     * Tests Transform_Crypt_MD5->getReverse()
+     */
+    public function testGetReverse() 
+    {
+        $this->setExpectedException('Q\Transform_Exception', 'There is no reverse transformation defined.');
+        $this->Crypt_MD5->getReverse();
+    }
 }
