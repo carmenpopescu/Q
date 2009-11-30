@@ -27,6 +27,15 @@ require_once 'Transform/Crypt/SystemTest.php';
 require_once 'Transform/Decrypt/MCryptTest.php';
 require_once 'Transform/Decrypt/OpenSSLTest.php';
 
+require_once 'Transform/SerializeTest.php';
+require_once 'Transform/UnserializeTest.php';
+
+require_once 'Transform/Compress/GzipTest.php';
+require_once 'Transform/Decompress/GzipTest.php';
+require_once 'Transform/Compress/BzipTest.php';
+require_once 'Transform/Decompress/BzipTest.php';
+
+
 /**
  * Static test suite.
  */
@@ -62,6 +71,12 @@ class TransformTest extends PHPUnit_Framework_TestSuite
         $this->addTestSuite('Transform_Crypt_OpenSSLTest'); 
         $this->addTestSuite('Transform_Decrypt_OpenSSLTest');        
         $this->addTestSuite('Transform_Crypt_SystemTest');
+        $this->addTestSuite('Transform_SerializeTest');        
+        $this->addTestSuite('Transform_UnserializeTest');
+        $this->addTestSuite('Transform_Compress_GzipTest');        
+        $this->addTestSuite('Transform_Decompress_GzipTest');
+        $this->addTestSuite('Transform_Compress_BzipTest');        
+        $this->addTestSuite('Transform_Decompress_BzipTest');
     }
     
     /**

@@ -115,6 +115,7 @@ class Transform_Test extends \PHPUnit_Framework_TestCase
         $transform = Transform::from('ini');
         $this->assertType('Q\Transform_Unserialize_Ini', $transform);
     }
+
     /**
      * Test Transform::from()
      */
@@ -126,6 +127,24 @@ class Transform_Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('testarea2', $transform->test2);
     }
 
+    /**
+     * Test Transform::compress()
+     */
+    public function testCompress()
+    {
+        $transform = Transform::compress('gzip');
+        $this->assertType('Q\Transform_Compress_Gzip', $transform);
+    }
+    
+    /**
+     * Test Transform::decompress()
+     */
+    public function testDecompress()
+    {
+        $transform = Transform::decompress('gzip');
+        $this->assertType('Q\Transform_Decompress_Gzip', $transform);
+    }
+    
     /**
      *  Test Transform::with() -> when using multiple transformers separated by +
      */

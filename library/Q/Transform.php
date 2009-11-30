@@ -57,8 +57,17 @@ abstract class Transform implements Transformer
       'decrypt-mcrypt' => 'Q\Transform_Decrypt_MCrypt',
       'encrypt-openssl' => 'Q\Transform_Crypt_OpenSSL',
       'decrypt-openssl' => 'Q\Transform_Decrypt_OpenSSL',
-      'encrypt-system' => 'Q\Transform_Crypt_System'
-      );
+      'encrypt-system' => 'Q\Transform_Crypt_System',
+	
+	  'serialize' => 'Q\Transform_Serialize',
+      'unserialize' => 'Q\Transform_Unserialize',
+	
+      'compress-gzip' => 'Q\Transform_Compress_Gzip',
+      'compress-bzip' => 'Q\Transform_Compress_Bzip',
+      'decompress-gzip' => 'Q\Transform_Decompress_Gzip',
+      'decompress-bzip' => 'Q\Transform_Decompress_Bzip'    
+	
+    );
 	
     /**
      * Next transform item in the chain

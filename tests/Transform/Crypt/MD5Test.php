@@ -30,7 +30,7 @@ class Transform_Crypt_MD5Test extends PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         $this->Crypt_Hash = null;
-        if (isset($this->tmpfile) && file_exists($this->tmpfile)) unlink($this->tmpfile);
+        if (file_exists($this->tmpfile)) unlink($this->tmpfile);
     }
     
     /**
@@ -68,18 +68,19 @@ class Transform_Crypt_MD5Test extends PHPUnit_Framework_TestCase
     
     /**
      * Tests Transform_Crypt_MD5->process() with a file
-     */    
+     */ 
     public function testEncrypt_File()
-    {        
-        $file = $this->getMock('Q\Fs_File', array('__toString'), array(), '', false);
+    {   
+        $file = $this->getMock('Q\Fs_File', array('__toString', 'getContents'), array(), '', false);
         $file->expects($this->any())->method('__toString')->will($this->returnValue($this->tmpfile));       
-
-        $this->assertEquals(md5_file($this->tmpfile), Transform::encrypt('md5')->process($file));
-    }
+        $file->expects($this->any())->method('getContents')->will($this->returnValue("a test string"));
         
+        $this->assertEquals(md5(file_get_contents($this->tmpfile) . "s3cret"), Transform::encrypt('md5', array('secret'=>'s3cret'))->process($file));
+    }
+  
     /**
      * Tests Transform_Crypt_MD5->process() with a file using a secret phrase
-     */
+     */    
     public function testEncrypt_File_Secret()
     {
         $file = $this->getMock('Q\Fs_File', array('__toString', 'getContents'), array(), '', false);
