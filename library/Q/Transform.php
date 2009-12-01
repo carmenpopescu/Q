@@ -64,9 +64,10 @@ abstract class Transform implements Transformer
 	
       'compress-gzip' => 'Q\Transform_Compress_Gzip',
       'compress-bzip' => 'Q\Transform_Compress_Bzip',
+      'compress-lzf' => 'Q\Transform_Compress_Lzf',
       'decompress-gzip' => 'Q\Transform_Decompress_Gzip',
-      'decompress-bzip' => 'Q\Transform_Decompress_Bzip'    
-	
+      'decompress-bzip' => 'Q\Transform_Decompress_Bzip',    
+      'decompress-lzf' => 'Q\Transform_Decompress_Lzf'
     );
 	
     /**

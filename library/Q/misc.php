@@ -1,6 +1,8 @@
 <?php
 namespace Q;
 
+require_once 'SecurityException.php';
+
 // ------- Class -------
 
 /**
@@ -292,7 +294,7 @@ function array_combine_assoc(array $array, $key=null, $glue='.')
     $result = array();
     
     foreach ($array as $k=>$value) {
-        if (is_array($value)) $result += array_combine_assoc($value, (isset($key) ? $key . $glue . $k : $k), $glue);
+          if (is_array($value)) $result += array_combine_assoc($value, (isset($key) ? $key . $glue . $k : $k), $glue);
           else $result[(isset($key) ? $key . $glue . $k : $k)] = $value;
     }
     
@@ -457,7 +459,7 @@ function var_give($expression, $return=false, $object_string=false, &$passed=arr
 	        
 	        array_pop($passed);
     	} else {
-            trigger_error("Won't serialize an object: Trying to serialize " . get_class($expression) . ', class doesn\'t have a __set_state() method.', E_USER_WARNING);
+            trigger_error("Won't serialize an object: Trying to serialize " . get_class($expression) . ", class doesn't have a __set_state() method.", E_USER_WARNING);
             return 'null'; 
         }
         

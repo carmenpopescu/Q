@@ -34,6 +34,8 @@ require_once 'Transform/Compress/GzipTest.php';
 require_once 'Transform/Decompress/GzipTest.php';
 require_once 'Transform/Compress/BzipTest.php';
 require_once 'Transform/Decompress/BzipTest.php';
+require_once 'Transform/Compress/LzfTest.php';
+require_once 'Transform/Decompress/LzfTest.php';
 
 
 /**
@@ -77,6 +79,8 @@ class TransformTest extends PHPUnit_Framework_TestSuite
         $this->addTestSuite('Transform_Decompress_GzipTest');
         $this->addTestSuite('Transform_Compress_BzipTest');        
         $this->addTestSuite('Transform_Decompress_BzipTest');
+        $this->addTestSuite('Transform_Compress_LzfTest');        
+        $this->addTestSuite('Transform_Decompress_LzfTest');
     }
     
     /**
