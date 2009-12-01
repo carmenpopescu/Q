@@ -145,8 +145,20 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
     {
         $reverse = $this->Decompress_Gzip->getReverse();
         $this->assertType('Q\Transform_Compress_Gzip', $reverse);
+        $this->assertEquals(null, $reverse->method);
     }
 
+    /**
+     * Tests Decompress_Gzip->getReverse() use reverse method
+     */
+    public function testGetReverse_useReverseMethod()
+    {
+        $this->Decompress_Gzip->method = 'inflate';
+        $reverse = $this->Decompress_Gzip->getReverse();
+        $this->assertType('Q\Transform_Compress_Gzip', $reverse);
+        $this->assertEquals('deflate', $reverse->method);
+    }
+    
     /**
      * Tests Decompress_Gzip->getReverse() with a chain
      */   	

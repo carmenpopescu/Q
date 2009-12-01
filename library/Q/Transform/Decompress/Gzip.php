@@ -34,6 +34,16 @@ class Transform_Decompress_Gzip extends Transform
     public $length = 0;
     
     /**
+     * Revers methods associated with the available methods 
+     * @var array
+     */
+    protected $reverse_method = array(
+        'uncompress' => 'compress',
+        'decode'   => 'encode',
+        'inflate'  => 'deflate'
+    );
+    
+    /**
      * Get a transformer that does the reverse action.
      *
      * @param Transformer $chain
@@ -42,6 +52,7 @@ class Transform_Decompress_Gzip extends Transform
     public function getReverse($chain=null)
     {
         $ob = new Transform_Compress_Gzip($this);
+        if (isset($this->method) && array_key_exists($this->method, $this->reverse_method)) $ob->method = $this->reverse_method[$this->method];
         if ($chain) $ob->chainInput($chain);
         return $this->chainInput ? $this->chainInput->getReverse($ob) : $ob;
     }
