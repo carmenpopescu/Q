@@ -42,7 +42,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testDecompress()
 	{
-	    $compressed = gzcompress("a test string", 9);
+	    $compressed = gzcompress("a test string");
 		$this->assertEquals(gzuncompress($compressed), $this->Decompress_Gzip->process($compressed));
 	}
 	
@@ -51,8 +51,8 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
 	 */	
 	public function testDecompress_inflate()
 	{
-        $compressed = gzdeflate("a test string", 9);
-	    $this->Decompress_Gzip->method = 'inflate';
+        $compressed = gzdeflate("a test string");
+	    $this->Decompress_Gzip->mode = FORCE_INFLATE;
 		$this->assertEquals(gzinflate($compressed), $this->Decompress_Gzip->process($compressed));
 	}
 	
@@ -61,9 +61,9 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */ 	
     public function testDecompress_decode()
     {
-        $this->markTestSkipped('Test this after install php 6 because gzdecode was introduced with PHP 6.0.0');
-        $compressed = gzencode("a test string", 9, FORCE_GZIP);
-        $this->Decompress_Gzip->method = 'decode';
+        $this->markTestSkipped('Test this after installing php 6 : gzdecode was introduced with PHP 6.0.0');
+        $compressed = gzencode("a test string", -1, FORCE_GZIP);
+        $this->Decompress_Gzip->headers = true;
         $this->assertEquals(gzdecode($compressed), $this->Decompress_Gzip->process($compressed));
     }
 
@@ -72,7 +72,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */ 
     public function testDecompress_withLength()
     {
-        $compressed = gzcompress("a test string", 9);
+        $compressed = gzcompress("a test string");
         $this->Decompress_Gzip->length = 15;
         $this->assertEquals(gzuncompress($compressed, 15), $this->Decompress_Gzip->process($compressed));
     }
@@ -82,7 +82,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testDecompress_File()
 	{
-        $compressed = gzcompress("a test string", 9);
+        $compressed = gzcompress("a test string");
 	    $file = $this->getMock('Q\Fs_File', array('__toString', 'getContents'), array(), '', false);
         $file->expects($this->any())->method('__toString')->will($this->returnValue($this->file));       
 	    $file->expects($this->once())->method('getContents')->will($this->returnValue($compressed));
@@ -95,7 +95,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */
 	public function testDecompress_Chain() 
     {
-        $compressed = gzcompress("a test string", 9);
+        $compressed = gzcompress("a test string");
         $mock = $this->getMock('Q\Transform', array('process'));
         $mock->expects($this->once())->method('process')->with($this->equalTo('test'))->will($this->returnValue($compressed));
         
@@ -111,7 +111,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */
 	public function testOutput() 
     {
-        $compressed = gzcompress("a test string", 9);
+        $compressed = gzcompress("a test string");
         ob_start();
         try{
             $this->Decompress_Gzip->output($compressed);
@@ -131,7 +131,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */
 	public function testSave() 
     {
-        $compressed = gzcompress("a test string", 9);
+        $compressed = gzcompress("a test string");
         $this->Decompress_Gzip->save($this->file, $compressed);
         
         $this->assertType('Q\Transform_Decompress_Gzip', $this->Decompress_Gzip);
@@ -145,18 +145,18 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
     {
         $reverse = $this->Decompress_Gzip->getReverse();
         $this->assertType('Q\Transform_Compress_Gzip', $reverse);
-        $this->assertEquals(null, $reverse->method);
+        $this->assertEquals(FORCE_GZIP, $reverse->mode);
     }
 
     /**
-     * Tests Decompress_Gzip->getReverse() use reverse method
+     * Tests Decompress_Gzip->getReverse() use reverse mode
      */
-    public function testGetReverse_useReverseMethod()
+    public function testGetReverse_useReverseMode()
     {
-        $this->Decompress_Gzip->method = 'inflate';
+        $this->Decompress_Gzip->mode = FORCE_INFLATE;
         $reverse = $this->Decompress_Gzip->getReverse();
         $this->assertType('Q\Transform_Compress_Gzip', $reverse);
-        $this->assertEquals('deflate', $reverse->method);
+        $this->assertEquals(FORCE_DEFLATE, $reverse->mode);
     }
     
     /**
@@ -190,14 +190,14 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Tests Transform_Decompress_Gzip->process() - unsupported method
+     * Tests Transform_Decompress_Gzip->process() - unsupported mode
      */
-	public function testProcessException_UnsupportedMethod() 
+	public function testProcessException_UnsupportedMode() 
     {
-        $compressed = gzcompress("a test string", 9);
-        $method = "a_method";
-        $this->setExpectedException('Exception', "Unable to uncompress data : Unknown uncompress method '{$method}'.");
-        $this->Decompress_Gzip->method = $method;
+        $compressed = gzcompress("a test string");
+        $mode = "a_mode";
+        $this->setExpectedException('Exception', "Unable to uncompress data : Unknown decoding mode '{$mode}'.");
+        $this->Decompress_Gzip->mode = $mode;
         $this->Decompress_Gzip->process($compressed);
     }
 }

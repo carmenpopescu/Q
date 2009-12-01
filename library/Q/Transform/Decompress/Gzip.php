@@ -5,11 +5,15 @@ require_once 'Q/Transform/Exception.php';
 require_once 'Q/Transform.php';
 require_once 'Q/Transform/Compress/Gzip.php';
 
+define('FORCE_UNZIP', FORCE_GZIP);
+define('FORCE_INFLATE', FORCE_DEFLATE);
+
 /**
  * Uncompress a compressed string
  * Options : 
- * method   possible values : 'inflate' to use gzinflate, 'uncompress' to use gzybcompress and 'decode' to use gzdecode. Default is used gzuncompress
+ * headers  Set true to use decode method.
  * length   Use with inflate. The maximum length of data to decode. Default is 0.
+ * mode    The decoding mode. Can be FORCE_UNZIP (the default) or FORCE_INFLATE.
  *
  * @package Transform
  */
@@ -20,12 +24,6 @@ class Transform_Decompress_Gzip extends Transform
      * @var string
      */
     public $ext = 'gzip';
-    
-    /**
-     * Type of compression.
-     * @var string
-     */
-    public $method;
 
     /**
      * Maximum length of data to decode.
@@ -34,14 +32,16 @@ class Transform_Decompress_Gzip extends Transform
     public $length = 0;
     
     /**
-     * Revers methods associated with the available methods 
-     * @var array
+     * Decoding mode; FORCE_UNZIP or FORCE_INFLATE.
+     * @var int 
      */
-    protected $reverse_method = array(
-        'uncompress' => 'compress',
-        'decode'   => 'encode',
-        'inflate'  => 'deflate'
-    );
+    public $mode = FORCE_UNZIP;
+    
+    /**
+     * Include headers
+     * @var boolean
+     */
+    public $headers = false;
     
     /**
      * Get a transformer that does the reverse action.
@@ -52,7 +52,6 @@ class Transform_Decompress_Gzip extends Transform
     public function getReverse($chain=null)
     {
         $ob = new Transform_Compress_Gzip($this);
-        if (isset($this->method) && array_key_exists($this->method, $this->reverse_method)) $ob->method = $this->reverse_method[$this->method];
         if ($chain) $ob->chainInput($chain);
         return $this->chainInput ? $this->chainInput->getReverse($ob) : $ob;
     }
@@ -65,20 +64,18 @@ class Transform_Decompress_Gzip extends Transform
      */
     public function process($data, $length=null)
     {
+        if (!is_bool($this->headers)) throw new Exception("Unable to unccompress data : Unknown header value '{'this->header'}'.");
+        if (!in_array($this->mode, array(FORCE_UNZIP, FORCE_INFLATE))) throw new Exception("Unable to uncompress data : Unknown decoding mode '{$this->mode}'.");
+        
         if ($this->chainInput) $data = $this->chainInput->process($data);
-
         if ($data instanceof Fs_File) $data = $data->getContents();
-        
-        switch (strtolower($this->method)) {
-            case null:          
-            case 'uncompress':  return gzuncompress($data, $this->length); 
 
-            case 'decode':      return gzdecode($data, $this->length);
-            
-            case 'inflate':     return gzinflate($data, $this->length);                    
-
-            default:            throw new Exception("Unable to uncompress data : Unknown uncompress method '{$this->method}'.");
+        if ($this->headers == false) {
+            switch (strtoupper($this->mode)) {
+                case FORCE_UNZIP:    return gzuncompress($data, $this->length);
+                case FORCE_INFLATE: return gzinflate($data, $this->length);
+            }            
         }
-        
+        return gzdecode($data, $this->length);        
     }
 }
