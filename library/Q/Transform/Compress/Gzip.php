@@ -6,11 +6,11 @@ require_once 'Q/Transform.php';
 require_once 'Q/Transform/Decompress/Gzip.php';
 
 /**
- * Create a gzip compressed string
+ * Create a gzip compressed string.
  * Options : 
- * headers Set true if you want to get zlib headers
+ * headers Set true if you want to get zlib headers.
  * level   The level of compression. Can be given as 0 for no compression up to 9 for maximum compression. Default is -1.
- * mode    The encoding mode. Can be FORCE_GZIP (the default) or FORCE_DEFLATE.
+ * mode    The encoding mode. Can be 'inflate' (the default) or 'gzip' in the constructoror or FORCE_GZIP (the default) or FORCE_DEFLATE.
  *
  * @package Transform
  */
@@ -40,6 +40,22 @@ class Transform_Compress_Gzip extends Transform
      */
     public $headers = false;
     
+    
+    /**
+     * Class constructor
+     * 
+     * @param array $options
+     */
+    public function __construct($options = array())
+    {
+        if (is_array($options)) {
+            if (isset($options['mode']) && $options['mode'] === 'deflate') $options['mode'] = FORCE_DEFLATE;
+              elseif (isset($options['mode']) && $options['mode'] === 'gzip') $options['mode'] = FORCE_GZIP;
+        }          
+        parent::__construct($options);
+    }
+    
+
     /**
      * Get a transformer that does the reverse action.
      *
@@ -61,19 +77,14 @@ class Transform_Compress_Gzip extends Transform
      */
     public function process($data)
     {
-        if (!is_int($this->level) || $this->level > 9) throw new Exception("Unable to compress data : Unknown encoding level '{$this->level}'.");
-        if (!is_bool($this->headers)) throw new Exception("Unable to compress data : Unknown header value '{'this->header'}'.");
-        if (!in_array($this->mode, array(FORCE_GZIP, FORCE_DEFLATE))) throw new Exception("Unable to compress data : Unknown encoding mode '{$this->mode}'.");
-        
+        if (!is_int($this->level) || $this->level > 9) throw new Exception("Unable to compress data: Unknown encoding level '{$this->level}'.");
+        if ($this->mode !== FORCE_GZIP && $this->mode !== FORCE_DEFLATE) throw new Exception("Unable to compress data: Unknown encoding mode '{$this->mode}'.");
+                
         if ($this->chainInput) $data = $this->chainInput->process($data);
         if ($data instanceof Fs_File) $data = $data->getContents();
 
-        if ($this->headers == false) {
-            switch (strtoupper($this->mode)) {
-                case FORCE_GZIP:    return gzcompress($data, $this->level);
-                case FORCE_DEFLATE: return gzdeflate($data, $this->level);
-            }            
-        }
+        if (!$this->headers) return $this->mode == FORCE_DEFLATE ? gzdeflate($data, $this->level) : gzcompress($data, $this->level);
+        
         return gzencode($data, $this->level, $this->mode);
     }
 }

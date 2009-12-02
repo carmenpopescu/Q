@@ -6,6 +6,15 @@ require_once 'Q/Transform/Exception.php';
 require_once 'Q/Transformer.php';
 require_once 'Q/Fs.php';
 
+/*
+Transform::convert('html', 'phpbb', $options)->process($data);
+
+Transform::to($this->mode, "afdsf")->process($d);
+
+Transform::with("to-{$this->mode}");
+
+"xml + php:/tmp/uploads/myhack.php";
+*/
 /**
  * Base class for Transform interfaces.
  * 
@@ -21,7 +30,7 @@ require_once 'Q/Fs.php';
  * }}
  * 
  * Available drivers :
- * xsl, replace, php, text2html, to-jason, to-xml, to-php, 
+ * xsl, replace, php, text2html, to-json, to-xml, to-php, 
  * to-yaml, to-ini, from-json, from-xml, 
  * from-php, from-yaml, from-ini
  *  * @package Transform
@@ -44,11 +53,13 @@ abstract class Transform implements Transformer
 	  'to-php' => 'Q\Transform_Serialize_PHP',
       'to-yaml' => 'Q\Transform_Serialize_Yaml',
       'to-ini' => 'Q\Transform_Serialize_Ini',
-      'from-json' => 'Q\Transform_Unserialize_Json',
+      'to-serial' => 'Q\Transform_Serialize_Serial',
+	  'from-json' => 'Q\Transform_Unserialize_Json',
 	  'from-xml' => 'Q\Transform_Unserialize_XML',
 	  'from-php' => 'Q\Transform_Unserialize_PHP',
       'from-yaml' => 'Q\Transform_Unserialize_Yaml',
       'from-ini' => 'Q\Transform_Unserialize_Ini',
+      'from-serial' => 'Q\Transform_Unserialize_Serial',
 	
 	  'encrypt-md5' => 'Q\Transform_Crypt_MD5',
       'encrypt-crc32' => 'Q\Transform_Crypt_CRC32',
@@ -58,9 +69,6 @@ abstract class Transform implements Transformer
       'encrypt-openssl' => 'Q\Transform_Crypt_OpenSSL',
       'decrypt-openssl' => 'Q\Transform_Decrypt_OpenSSL',
       'encrypt-system' => 'Q\Transform_Crypt_System',
-	
-	  'serialize' => 'Q\Transform_Serialize',
-      'unserialize' => 'Q\Transform_Unserialize',
 	
       'compress-gzip' => 'Q\Transform_Compress_Gzip',
       'compress-bzip' => 'Q\Transform_Compress_Bzip',

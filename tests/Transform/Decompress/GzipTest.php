@@ -37,8 +37,26 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
 		parent::tearDown();
 	}
 	
-	/**
-	 * Tests Decompress_Gzip->process() with blowfish method
+    /**
+     * Tests Decompress_Gzip with inflate mode
+     */
+    public function testConstruct_withInflate()
+    {
+        $decompress = new Transform_Decompress_Gzip(array('mode'=>'inflate'));
+        $this->assertEquals(FORCE_DEFLATE, $decompress->mode);
+    }
+	
+    /**
+     * Tests Decompress_Gzip with gzip mode
+     */
+    public function testConstruct_withGzip()
+    {
+        $decompress = new Transform_Decompress_Gzip(array('mode'=>'gzip'));
+        $this->assertEquals(FORCE_GZIP, $decompress->mode);
+    }
+    
+    /**
+	 * Tests Decompress_Gzip->process()
 	 */
 	public function testDecompress()
 	{
@@ -52,7 +70,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
 	public function testDecompress_inflate()
 	{
         $compressed = gzdeflate("a test string");
-	    $this->Decompress_Gzip->mode = FORCE_INFLATE;
+	    $this->Decompress_Gzip->mode = FORCE_DEFLATE;
 		$this->assertEquals(gzinflate($compressed), $this->Decompress_Gzip->process($compressed));
 	}
 	
@@ -153,7 +171,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
      */
     public function testGetReverse_useReverseMode()
     {
-        $this->Decompress_Gzip->mode = FORCE_INFLATE;
+        $this->Decompress_Gzip->mode = FORCE_DEFLATE;
         $reverse = $this->Decompress_Gzip->getReverse();
         $this->assertType('Q\Transform_Compress_Gzip', $reverse);
         $this->assertEquals(FORCE_DEFLATE, $reverse->mode);
@@ -196,7 +214,7 @@ class Transform_Decompress_GzipTest extends PHPUnit_Framework_TestCase
     {
         $compressed = gzcompress("a test string");
         $mode = "a_mode";
-        $this->setExpectedException('Exception', "Unable to uncompress data : Unknown decoding mode '{$mode}'.");
+        $this->setExpectedException('Exception', "Unable to uncompress data: Unknown decoding mode '{$mode}'.");
         $this->Decompress_Gzip->mode = $mode;
         $this->Decompress_Gzip->process($compressed);
     }

@@ -19,7 +19,7 @@ class Transform_Compress_Bzip extends Transform
      * Default extension for file with serialized data.
      * @var string
      */
-    public $ext = 'bzip';
+    public $ext = 'bz';
     
     /**
      * Blocksize used during compression.

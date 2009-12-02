@@ -18,7 +18,7 @@ class Transform_Decompress_Bzip extends Transform
      * Default extension for file with serialized data.
      * @var string
      */
-    public $ext = 'bzip';
+    public $ext = 'bz';
     
     /**
      * Alternative decompression algorithm which uses less memory.

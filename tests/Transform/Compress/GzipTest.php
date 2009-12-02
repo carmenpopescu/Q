@@ -38,6 +38,25 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
 		parent::tearDown();
 	}
 	
+    
+    /**
+     * Tests Compress_Gzip with deflate mode
+     */
+    public function testConstruct_withDeflate()
+    {
+        $compress = new Transform_Compress_Gzip(array('mode'=>'deflate'));
+        $this->assertEquals(FORCE_DEFLATE, $compress->mode);
+    }
+    
+    /**
+     * Tests Compress_Gzip with gzip mode
+     */
+    public function testConstruct_withGzip()
+    {
+        $decompress = new Transform_Compress_Gzip(array('mode'=>'gzip'));
+        $this->assertEquals(FORCE_GZIP, $decompress->mode);
+    }
+	
 	/**
 	 * Tests Compress_Gzip->process() with blowfish method
 	 */
@@ -60,6 +79,7 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
      */ 
     public function testCompress_encode_Gzip()
     {
+
         $this->Compress_Gzip->headers = true;
         $this->assertEquals(gzencode("a test string"), $this->Compress_Gzip->process("a test string"));
     }
@@ -138,7 +158,7 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
     {
         $reverse = $this->Compress_Gzip->getReverse();
         $this->assertType('Q\Transform_Decompress_Gzip', $reverse);
-        $this->assertEquals(FORCE_UNZIP, $reverse->mode);
+        $this->assertEquals(FORCE_GZIP, $reverse->mode);
         $this->assertSame(false, $reverse->headers);
     }
 
@@ -150,7 +170,7 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
         $this->Compress_Gzip->mode = FORCE_DEFLATE;
         $reverse = $this->Compress_Gzip->getReverse();
         $this->assertType('Q\Transform_Decompress_Gzip', $reverse);
-        $this->assertEquals(FORCE_INFLATE, $reverse->mode);
+        $this->assertEquals(FORCE_DEFLATE, $reverse->mode);
     }
     
     /**
@@ -189,7 +209,7 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
 	public function testProcessException_UnsupportedMode() 
     {
         $mode = "a_mode";
-        $this->setExpectedException('Exception', "Unable to compress data : Unknown encoding mode '{$mode}'.");
+        $this->setExpectedException('Exception', "Unable to compress data: Unknown encoding mode '{$mode}'.");
         $this->Compress_Gzip->mode = $mode;
         $this->Compress_Gzip->process('a test string');
     }
@@ -199,7 +219,7 @@ class Transform_Compress_GzipTest extends PHPUnit_Framework_TestCase
      */
     public function testProcessException_UnsupportedLevel() 
     {
-        $this->setExpectedException('Exception', "Unable to compress data : Unknown encoding level '13'.");
+        $this->setExpectedException('Exception', "Unable to compress data: Unknown encoding level '13'.");
         $this->Compress_Gzip->level = 13;
         $this->Compress_Gzip->process('a test string');
     }
